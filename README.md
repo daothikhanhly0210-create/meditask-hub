@@ -48,8 +48,9 @@ node scripts/patch-next-fat32.cjs
 ```
 
 > Khi chuyển sang ổ NTFS (hoặc Docker/Linux), có thể bỏ patch này và chuyển lại
-> Turbopack để build nhanh hơn. Trên **Vercel** (Linux), script `vercel-build` build
-> mặc định (không `--webpack`) nên nhanh và sạch.
+> Turbopack để build nhanh hơn. Trên **Vercel** (Linux), script `vercel-build` hiện
+> cũng dùng `--webpack` để giống hệt bản build đã kiểm thử ở máy; sau khi xác nhận
+> Turbopack chạy tốt có thể bỏ cờ này để build nhanh hơn.
 
 **Lưu ý khi chạy dev:** đừng chạy `npm run build` và `npm run dev` cùng lúc (chúng
 dùng chung thư mục `.next`). Trên ổ FAT32 chậm, lần biên dịch đầu tiên đôi khi lỗi
