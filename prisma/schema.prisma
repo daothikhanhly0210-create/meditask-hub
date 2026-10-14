@@ -1,0 +1,83 @@
+// Internal HR & Task Management — Phase 1 data model.
+// PostgreSQL is used for both development and production. `role` is stored as
+// a String (rather than a Prisma enum) and validated in application code
+// (see src/lib/rbac.ts), which keeps the schema portable and easy to evolve.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Direct (non-pooled) connection used by the Prisma CLI for migrations.
+  // In production this is the Neon "direct" string; locally it can be omitted.
+  directUrl = env("DIRECT_URL")
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  nameEn      String?
+  code        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  headId String? @unique
+  head   User?   @relation("DepartmentHead", fields: [headId], references: [id], onDelete: SetNull)
+
+  users User[] @relation("DepartmentMembers")
+
+  @@map("departments")
+}
+
+model User {
+  id                 String  @id @default(cuid())
+  email              String  @unique
+  name               String
+  passwordHash       String
+  role               String  @default("EMPLOYEE")
+  isActive           Boolean @default(true)
+  mustChangePassword Boolean @default(true)
+  phone              String?
+  jobTitle           String?
+
+  departmentId String?
+  department   Department? @relation("DepartmentMembers", fields: [departmentId], references: [id], onDelete: SetNull)
+
+  headedDepartment Department? @relation("DepartmentHead")
+
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  auditLogs AuditLog[]
+
+  @@index([departmentId])
+  @@index([role])
+  @@map("users")
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  meta      String?
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}
