@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/session";
 import { recordAudit } from "@/lib/audit";
@@ -122,6 +121,11 @@ export async function updateUserAction(
   }
 
   const data = parsed.data;
+
+  // Prevent an administrator from locking themselves out of the system.
+  if (userId === actor.id && (data.role !== "ADMIN" || !data.isActive)) {
+    return errorState("admin.cannotChangeOwnRole");
+  }
 
   try {
     await prisma.user.update({
@@ -254,14 +258,4 @@ export async function deleteUserAction(
     console.error("[users] delete failed", error);
     return errorState("messages.actionFailed");
   }
-}
-
-const idSchema = z.object({ userId: z.string().min(1) });
-
-export async function deleteUserById(userId: string): Promise<ActionState> {
-  const parsed = idSchema.safeParse({ userId });
-  if (!parsed.success) return errorState("messages.invalidData");
-  const formData = new FormData();
-  formData.set("userId", parsed.data.userId);
-  return deleteUserAction(undefined, formData);
 }

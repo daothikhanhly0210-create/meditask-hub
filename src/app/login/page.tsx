@@ -28,7 +28,7 @@ export default async function LoginPage() {
         <LoginForm showDemo={showDemo} />
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          {t("common.appName")} · Phase 1
+          {t("common.appName")}
         </p>
       </div>
     </main>

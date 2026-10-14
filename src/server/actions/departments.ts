@@ -140,7 +140,7 @@ export async function deleteDepartmentAction(
   try {
     const memberCount = await prisma.user.count({ where: { departmentId } });
     if (memberCount > 0) {
-      return errorState("admin.cannotDeleteHeadDepartment");
+      return errorState("admin.cannotDeleteDepartmentInUse");
     }
 
     await prisma.department.delete({ where: { id: departmentId } });

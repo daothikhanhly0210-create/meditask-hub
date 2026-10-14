@@ -69,7 +69,7 @@ const en: typeof vi = {
     departmentLabel: "Department",
     noDepartment: "No department assigned",
     phaseNotice:
-      "This is Phase 1: authentication, role-based access control, and administration. Meeting recording, minutes, and task assignment arrive in later phases.",
+      "Authentication, role-based access control and administration are live. Meeting recording, minutes and task assignment are being built in the next phases.",
     statUsers: "Users",
     statDepartments: "Departments",
     statActive: "Active",
@@ -136,7 +136,8 @@ const en: typeof vi = {
     assignToDepartment: "Department",
     noHead: "Not assigned",
     cannotDeleteSelf: "You cannot delete your own account.",
-    cannotDeleteHeadDepartment:
+    cannotChangeOwnRole: "You cannot change your own role or lock your own account.",
+    cannotDeleteDepartmentInUse:
       "Cannot delete: the department still has members or a head. Reassign them first.",
     deleteUserConfirm: "Permanently delete account {name}?",
     deleteDepartmentConfirm: "Delete department {name}?",

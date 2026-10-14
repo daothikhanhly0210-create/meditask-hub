@@ -67,7 +67,7 @@ const vi = {
     departmentLabel: "Phòng ban",
     noDepartment: "Chưa thuộc phòng ban",
     phaseNotice:
-      "Đây là bản Phase 1: đăng nhập, phân quyền và quản trị. Các tính năng ghi âm cuộc họp, biên bản và giao việc sẽ được bổ sung ở các giai đoạn tiếp theo.",
+      "Đăng nhập, phân quyền (RBAC) và quản trị đã hoạt động. Các tính năng ghi âm cuộc họp, biên bản và giao việc đang được triển khai ở các giai đoạn tiếp theo.",
     statUsers: "Người dùng",
     statDepartments: "Phòng ban",
     statActive: "Đang hoạt động",
@@ -134,8 +134,10 @@ const vi = {
     assignToDepartment: "Thuộc phòng ban",
     noHead: "Chưa chỉ định",
     cannotDeleteSelf: "Bạn không thể xóa tài khoản của chính mình.",
-    cannotDeleteHeadDepartment:
-      "Không thể xóa: phòng ban đang có nhân sự hoặc trưởng phòng. Hãy chuyển họ trước.",
+    cannotChangeOwnRole:
+      "Bạn không thể tự đổi vai trò hoặc tự khóa tài khoản của mình.",
+    cannotDeleteDepartmentInUse:
+      "Không thể xóa: phòng ban vẫn còn nhân sự hoặc trưởng phòng. Hãy chuyển họ trước.",
     deleteUserConfirm: "Xóa vĩnh viễn tài khoản {name}?",
     deleteDepartmentConfirm: "Xóa phòng ban {name}?",
   },
