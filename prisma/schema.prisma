@@ -91,6 +91,22 @@ model Setting {
   @@map("settings")
 }
 
+// Failed sign-in counters. Kept in the database (not in memory) so the limit
+// holds across every serverless instance. One row per key, where a key is
+// `email:<address>` or `ip:<address>`; see src/lib/login-throttle.ts.
+model LoginAttempt {
+  id            String    @id @default(cuid())
+  identifier    String    @unique
+  failures      Int       @default(0)
+  firstFailedAt DateTime?
+  lastFailedAt  DateTime?
+  lockedUntil   DateTime?
+
+  @@index([lastFailedAt])
+  @@index([lockedUntil])
+  @@map("login_attempts")
+}
+
 model AuditLog {
   id        String   @id @default(cuid())
   actorId   String?

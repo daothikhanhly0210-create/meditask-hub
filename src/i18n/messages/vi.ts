@@ -39,6 +39,8 @@ const vi = {
     demoAccounts: "Tài khoản demo",
     demoHint: "Mỗi vai trò dùng một đuôi email riêng. Bấm để điền nhanh thông tin đăng nhập.",
     loginFailed: "Đăng nhập thất bại. Vui lòng thử lại.",
+    tooManyAttempts:
+      "Bạn đã đăng nhập sai quá nhiều lần. Vui lòng thử lại sau khoảng 15 phút.",
   },
   roles: {
     ADMIN: "Quản trị viên",

@@ -1,12 +1,14 @@
 "use server";
 
 import { AuthError } from "next-auth";
+import { headers } from "next/headers";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { signIn, signOut, unstable_update } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { recordAudit } from "@/lib/audit";
+import { clientIp, lockedUntil, throttleKeys } from "@/lib/login-throttle";
 import { changePasswordSchema, toFieldErrors } from "@/lib/validation";
 import { errorState, successState, type ActionState } from "@/lib/action-state";
 
@@ -28,9 +30,18 @@ export async function loginAction(
     return errorState("auth.loginFailed");
   }
 
+  const email = parsed.data.email.toLowerCase();
+  const keys = throttleKeys(email, clientIp(await headers()));
+
+  // Say so plainly when the account (or the network) is temporarily locked,
+  // instead of the generic "wrong email or password".
+  if (await lockedUntil(keys)) {
+    return errorState("auth.tooManyAttempts");
+  }
+
   try {
     await signIn("credentials", {
-      email: parsed.data.email.toLowerCase(),
+      email,
       password: parsed.data.password,
       redirectTo: "/dashboard",
     });

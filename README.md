@@ -63,6 +63,9 @@ mình tham dự hoặc có đầu việc thuộc khoa mình.
 
 - Tài khoản do quản trị viên tạo (hoặc vừa được đặt lại mật khẩu) **bắt buộc tự đổi mật khẩu** ở lần
   đăng nhập đầu tiên; trước khi đổi xong chỉ vào được trang cá nhân.
+- **Chống dò mật khẩu:** sai 5 lần thì tạm khoá tài khoản 15 phút; một địa chỉ IP thử sai 30 lần
+  cũng bị khoá 15 phút (ngưỡng cao hơn vì cả bệnh viện thường đi qua một IP NAT). Bộ đếm lưu trong
+  cơ sở dữ liệu nên áp dụng cho mọi máy chủ Vercel, và một lần đăng nhập đúng sẽ xoá bộ đếm.
 - Mọi phản hồi kèm tiêu đề bảo mật: HSTS, chặn nhúng iframe, chặn đoán MIME, giới hạn quyền trình duyệt.
 - Phiên đăng nhập là JWT ký bằng `AUTH_SECRET` **riêng cho từng môi trường** (đổi `AUTH_SECRET` là
   đăng xuất toàn bộ). Khoá bí mật chỉ nằm trong biến môi trường — xem `.env.example`.

@@ -41,6 +41,8 @@ const en: typeof vi = {
     demoAccounts: "Demo accounts",
     demoHint: "Each role has its own email domain. Click to autofill the sign-in form.",
     loginFailed: "Sign-in failed. Please try again.",
+    tooManyAttempts:
+      "Too many failed sign-in attempts. Please try again in about 15 minutes.",
   },
   roles: {
     ADMIN: "Administrator",
