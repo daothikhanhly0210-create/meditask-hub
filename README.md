@@ -45,10 +45,25 @@ Trang **Báo cáo** tổng hợp tiến độ theo khoa/phòng, **xếp hạng c
 và cho **xuất CSV**; lọc theo khoảng ngày và khoa/phòng. Ban Giám đốc xem toàn viện, trưởng khoa
 chỉ xem khoa mình, quản trị viên chỉ xem số liệu tổng hợp (không có nội dung công việc).
 
+## Ghi âm – Biên bản
+
+Trang **Cuộc họp** số hóa buổi họp theo mã `BB-YYYY-NNN`: ghi lại **thành phần tham dự** (chọn
+cán bộ trong hệ thống hoặc nhập tên tự do), soạn **biên bản** bằng Markdown (tóm tắt, nội dung,
+kết luận), và lập **đầu việc** ngay trong biên bản. Mỗi đầu việc chuyển thành **phiếu giao việc**
+cho một khoa/phòng chỉ bằng một cú nhấp — trưởng khoa nhận phiếu rồi chia nhỏ cho cán bộ như B2.
+
+Quy trình biên bản: `NHÁP → CÓ BIÊN BẢN → ĐÃ DUYỆT`. Thư ký soạn và trình duyệt, Ban Giám đốc
+duyệt và có thể mở lại để sửa. Biên bản xuất ra **Word (.docx)**, **PDF** (nhúng font Unicode nên
+hiển thị đủ dấu tiếng Việt) hoặc **gửi email** kèm cả hai tệp.
+
+Phạm vi xem: Ban Giám đốc và Thư ký thấy mọi cuộc họp; trưởng khoa và cán bộ chỉ thấy cuộc họp
+mình tham dự hoặc có đầu việc thuộc khoa mình.
+
 ## Lộ trình
 
 - [x] **B0–B1** — Đăng nhập, phân quyền, quản trị; vai trò theo phạm vi (Admin / Ban Giám đốc / Thư ký / Trưởng khoa / Cán bộ)
 - [x] **B2** — Công việc: phiếu giao việc → sub-task, nghiệm thu 2 bước, tiến độ tự động theo trạng thái, đóng/mở khoa, bình luận, tệp đính kèm, người theo dõi, cảnh báo quá hạn
 - [x] **B3** — Báo cáo: toàn viện / khoa, xếp hạng cán bộ, việc quá hạn, xuất CSV
-- [ ] **B4** — Ghi âm – Biên bản
+- [x] **B4a** — Ghi âm – Biên bản (phần biên bản): cuộc họp, thành phần, biên bản, đầu việc → phiếu giao việc, xuất Word/PDF, gửi email
+- [ ] **B4b** — Ghi âm trên trình duyệt + chuyển giọng nói thành văn bản và biên bản tự động (Groq hoặc Whisper chạy nội bộ)
 - [ ] **B5** — Thông báo (trong app + email)

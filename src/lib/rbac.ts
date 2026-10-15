@@ -29,7 +29,9 @@ export const PERMISSIONS = [
   "task:target:close", // close (or reopen) a department that needs no work
   "task:follow", // add/remove followers on a work order
   // Meetings & minutes
-  "meeting:record",
+  "meeting:view", // browse meetings
+  "meeting:record", // create/edit meetings and their minutes
+  "meeting:approve", // sign off on a finished minute
   // Account
   "profile:view",
 ] as const;
@@ -52,6 +54,8 @@ const PERMISSION_MATRIX: Record<Role, readonly Permission[]> = {
     "task:view:company",
     "task:target:close",
     "task:follow",
+    "meeting:view",
+    "meeting:approve",
     "profile:view",
   ],
   SECRETARY: [
@@ -60,6 +64,7 @@ const PERMISSION_MATRIX: Record<Role, readonly Permission[]> = {
     "task:assign:company",
     "task:view:company",
     "task:target:close",
+    "meeting:view",
     "meeting:record",
     "profile:view",
   ],
@@ -71,9 +76,10 @@ const PERMISSION_MATRIX: Record<Role, readonly Permission[]> = {
     "task:view:assigned",
     "task:update:status",
     "task:approve",
+    "meeting:view",
     "profile:view",
   ],
-  STAFF: ["task:view", "task:view:assigned", "task:update:status", "profile:view"],
+  STAFF: ["task:view", "task:view:assigned", "task:update:status", "meeting:view", "profile:view"],
 };
 
 export function isRole(value: unknown): value is Role {
@@ -114,6 +120,9 @@ export function requiredPermissionsForPath(pathname: string): readonly Permissio
   if (pathname.startsWith("/admin/departments")) return ["department:manage"];
   if (pathname.startsWith("/admin")) return ["settings:manage"];
   if (pathname.startsWith("/tasks")) return ["task:view"];
+  if (pathname.startsWith("/meetings")) {
+    return ["meeting:view", "meeting:record", "meeting:approve"];
+  }
   if (pathname.startsWith("/reports")) {
     return ["report:company", "report:department", "report:overview"];
   }

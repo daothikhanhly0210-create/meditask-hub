@@ -24,11 +24,18 @@ function getTransporter(): Transporter | null {
   return cachedTransporter;
 }
 
+export type MailAttachment = {
+  filename: string;
+  content: Buffer;
+  contentType?: string;
+};
+
 export type MailMessage = {
   to: string;
   subject: string;
   text: string;
   html?: string;
+  attachments?: MailAttachment[];
 };
 
 export async function sendMail(message: MailMessage): Promise<boolean> {

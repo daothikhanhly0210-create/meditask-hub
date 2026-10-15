@@ -20,7 +20,7 @@ import {
   managesTarget,
   workOrderScope,
 } from "@/lib/tasks";
-import type { Prisma } from "@prisma/client";
+import { nextWorkOrderCode } from "@/server/codes";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -90,22 +90,6 @@ async function loadSubTaskContext(subTaskId: string) {
 }
 
 /** Generate the next human code, e.g. PGV-2026-001 (per-year sequence). */
-async function nextWorkOrderCode(tx: Prisma.TransactionClient): Promise<string> {
-  const year = new Date().getFullYear();
-  const prefix = `PGV-${year}-`;
-  // Scan this year's codes and take the numeric maximum: robust against
-  // deletions and against 4-digit sequences sorting oddly as strings.
-  const rows = await tx.workOrder.findMany({
-    where: { code: { startsWith: prefix } },
-    select: { code: true },
-  });
-  let max = 0;
-  for (const row of rows) {
-    const parsed = Number.parseInt(row.code.slice(prefix.length), 10);
-    if (Number.isFinite(parsed) && parsed > max) max = parsed;
-  }
-  return `${prefix}${String(max + 1).padStart(3, "0")}`;
-}
 
 /**
  * Persist the derived work-order status. Called after every mutation that can

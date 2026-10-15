@@ -102,6 +102,61 @@ export const rejectSubTaskSchema = z.object({
   reason: z.string().trim().min(2, "validation.rejectReasonRequired").max(500),
 });
 
+// ---------------------------------------------------------------------------
+// B4 — Meetings & minutes
+// ---------------------------------------------------------------------------
+
+const meetingTitle = z
+  .string()
+  .trim()
+  .min(2, "validation.titleTooShort")
+  .max(200, "validation.titleTooLong");
+
+export const meetingSchema = z.object({
+  title: meetingTitle,
+  meetingDate: z.string().trim().min(1, "validation.dateRequired").max(30),
+  location: optionalText(200),
+  chairName: optionalText(120),
+  secretaryName: optionalText(120),
+  participantIds: z.array(z.string().min(1)),
+  // Free-text attendees, one name per line.
+  participantNames: z.string().max(2000).optional().nullable(),
+});
+
+export const minuteSchema = z.object({
+  meetingId: z.string().min(1),
+  summary: optionalText(2000),
+  content: z
+    .string()
+    .trim()
+    .min(1, "validation.contentRequired")
+    .max(20000, "validation.contentTooLong"),
+  decisions: optionalText(5000),
+});
+
+export const actionItemSchema = z.object({
+  meetingId: z.string().min(1),
+  actionItemId: optionalText(50),
+  title: taskTitle,
+  description: optionalText(2000),
+  dueDate: optionalText(30),
+  departmentId: optionalText(50),
+  assigneeId: optionalText(50),
+});
+
+export const meetingEmailSchema = z.object({
+  meetingId: z.string().min(1),
+  recipients: z
+    .string()
+    .trim()
+    .min(3, "validation.emailRequired")
+    .max(2000, "validation.emailTooLong"),
+});
+
+export type MeetingInput = z.infer<typeof meetingSchema>;
+export type MinuteInput = z.infer<typeof minuteSchema>;
+export type ActionItemInput = z.infer<typeof actionItemSchema>;
+
 export type WorkOrderInput = z.infer<typeof workOrderSchema>;
 export type SubTaskInput = z.infer<typeof subTaskSchema>;
 export type CommentInput = z.infer<typeof commentSchema>;

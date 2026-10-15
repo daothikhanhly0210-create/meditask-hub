@@ -248,6 +248,94 @@ async function main() {
     }
   }
 
+  // Demo meetings & minutes (B4). Only seeded into an empty meeting table so
+  // real data is never touched by re-running the seed.
+  console.log("Seeding demo meetings...");
+  const existingMeetings = await prisma.meeting.count();
+  if (existingMeetings === 0) {
+    const year = new Date().getFullYear();
+    const meetingDirector = await prisma.user.findUnique({
+      where: { email: "director@director.company.local" },
+    });
+    const meetingSecretary = await prisma.user.findUnique({
+      where: { email: "secretary@secretary.company.local" },
+    });
+    const meetingHead = await prisma.user.findUnique({
+      where: { email: "head@head.company.local" },
+    });
+    const meetingStaff = await prisma.user.findUnique({
+      where: { email: "staff@staff.company.local" },
+    });
+    const meetingOutpatient = departmentIdByCode.get("KKB");
+
+    if (meetingSecretary && meetingDirector && meetingHead && meetingStaff) {
+      await prisma.meeting.create({
+        data: {
+          code: `BB-${year}-001`,
+          title: "Giao ban thường kỳ tháng",
+          meetingDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+          location: "Phòng họp tầng 3",
+          chairName: meetingDirector.name,
+          secretaryName: meetingSecretary.name,
+          status: "APPROVED",
+          createdById: meetingSecretary.id,
+          approvedById: meetingDirector.id,
+          approvedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+          participants: {
+            create: [
+              { userId: meetingDirector.id, name: meetingDirector.name, role: "Ban Giám đốc" },
+              { userId: meetingHead.id, name: meetingHead.name, role: "Trưởng khoa" },
+              { userId: meetingStaff.id, name: meetingStaff.name },
+            ],
+          },
+          minute: {
+            create: {
+              summary:
+                "Đánh giá công tác tiếp đón bệnh nhân và thống nhất kế hoạch tháng tới.",
+              decisions: "Thống nhất cải tiến quy trình tiếp đón, hoàn thành trước ngày 30.",
+              content: [
+                "# Nội dung cuộc họp",
+                "- Rà soát thời gian chờ tại khu vực khám bệnh.",
+                "- Thống nhất bổ sung nhân sự giờ cao điểm.",
+                "",
+                "# Phân công",
+                "- Khoa Khám bệnh cập nhật biểu mẫu tiếp đón.",
+              ].join("\n"),
+              createdById: meetingSecretary.id,
+            },
+          },
+          actionItems: {
+            create: [
+              {
+                title: "Cập nhật biểu mẫu tiếp đón bệnh nhân",
+                description: "Chuẩn hóa biểu mẫu và triển khai tại quầy tiếp đón.",
+                dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                departmentId: meetingOutpatient,
+                assigneeId: meetingStaff.id,
+              },
+            ],
+          },
+        },
+      });
+
+      await prisma.meeting.create({
+        data: {
+          code: `BB-${year}-002`,
+          title: "Họp chuẩn bị kiểm tra chất lượng",
+          meetingDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+          location: "Hội trường",
+          chairName: meetingDirector.name,
+          secretaryName: meetingSecretary.name,
+          status: "DRAFT",
+          createdById: meetingSecretary.id,
+          participants: {
+            create: [{ userId: meetingHead.id, name: meetingHead.name, role: "Trưởng khoa" }],
+          },
+        },
+      });
+    }
+  }
+
   console.log("Seeding settings...");
   for (const setting of settings) {
     await prisma.setting.upsert({

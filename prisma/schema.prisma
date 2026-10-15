@@ -33,7 +33,8 @@ model Department {
 
   users User[] @relation("DepartmentMembers")
 
-  workOrderTargets WorkOrderTarget[]
+  workOrderTargets   WorkOrderTarget[]
+  minuteActionItems  MinuteActionItem[]
 
   @@map("departments")
 }
@@ -70,6 +71,12 @@ model User {
   workOrderFollows  WorkOrderFollower[]   @relation("WorkOrderFollower")
   comments          Comment[]             @relation("CommentAuthor")
   attachments       Attachment[]          @relation("AttachmentUploader")
+
+  meetingsCreated    Meeting[]             @relation("MeetingCreator")
+  meetingsApproved   Meeting[]             @relation("MeetingApprover")
+  meetingAttendance  MeetingParticipant[]  @relation("MeetingParticipant")
+  minutesAuthored    Minute[]              @relation("MinuteAuthor")
+  actionItemsAssigned MinuteActionItem[]   @relation("ActionItemAssignee")
 
   @@index([departmentId])
   @@index([role])
@@ -133,6 +140,7 @@ model WorkOrder {
   followers   WorkOrderFollower[]
   comments    Comment[]
   attachments Attachment[]
+  actionItems MinuteActionItem[]
 
   @@index([createdById])
   @@index([status])
@@ -267,4 +275,115 @@ model Attachment {
   @@index([workOrderId])
   @@index([subTaskId])
   @@map("attachments")
+}
+
+// ---------------------------------------------------------------------------
+// B4 — Meetings & minutes (ghi âm cuộc họp & biên bản)
+//
+//   Meeting (cuộc họp)
+//     ├── MeetingParticipant (người tham dự)
+//     ├── Minute (biên bản — one-to-one, nội dung sửa được)
+//     └── MinuteActionItem (đầu việc -> tạo phiếu giao việc của B2)
+//
+// Status values are stored as Strings and validated in application code
+// (see src/lib/meetings.ts), keeping the schema portable and easy to evolve.
+// ---------------------------------------------------------------------------
+
+model Meeting {
+  id            String   @id @default(cuid())
+  code          String   @unique // human code, e.g. BB-2026-001
+  title         String
+  meetingDate   DateTime
+  location      String?
+  chairName     String?
+  secretaryName String?
+  status        String   @default("DRAFT") // DRAFT | MINUTED | APPROVED
+  language      String   @default("vi")
+
+  createdById String
+  createdBy   User   @relation("MeetingCreator", fields: [createdById], references: [id])
+
+  approvedById String?
+  approvedBy   User?     @relation("MeetingApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants MeetingParticipant[]
+  minute       Minute?
+  actionItems  MinuteActionItem[]
+
+  @@index([meetingDate])
+  @@index([status])
+  @@index([createdById])
+  @@map("meetings")
+}
+
+model MeetingParticipant {
+  id        String  @id @default(cuid())
+  meetingId String
+  meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  // Optional link to a real account; `name` is always stored so free-text
+  // attendees (guests, external experts) survive account changes.
+  userId String?
+  user   User?   @relation("MeetingParticipant", fields: [userId], references: [id], onDelete: SetNull)
+
+  name String
+  role String?
+
+  createdAt DateTime @default(now())
+
+  @@index([meetingId])
+  @@index([userId])
+  @@map("meeting_participants")
+}
+
+model Minute {
+  id        String  @id @default(cuid())
+  meetingId String  @unique
+  meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  summary   String?
+  decisions String?
+  content   String // markdown body
+
+  createdById String
+  createdBy   User   @relation("MinuteAuthor", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdById])
+  @@map("minutes")
+}
+
+model MinuteActionItem {
+  id          String    @id @default(cuid())
+  meetingId   String
+  meeting     Meeting   @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  dueDate     DateTime?
+
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  assigneeId String?
+  assignee   User?   @relation("ActionItemAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  // Set once the action item has been turned into a B2 work order.
+  workOrderId String?
+  workOrder   WorkOrder? @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([meetingId])
+  @@index([departmentId])
+  @@index([assigneeId])
+  @@index([workOrderId])
+  @@map("minute_action_items")
 }
