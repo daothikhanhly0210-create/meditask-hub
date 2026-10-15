@@ -16,11 +16,19 @@ export const authConfig = {
   },
   trustHost: true,
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id as string;
         token.role = user.role;
         token.departmentId = user.departmentId ?? null;
+        token.mustChangePassword = user.mustChangePassword ?? false;
+      }
+      // `unstable_update` from a server action re-runs this callback with
+      // trigger === "update" so the flag clears right after a password change
+      // (see changePasswordAction), without forcing a fresh sign-in.
+      const updated = (session as { user?: { mustChangePassword?: boolean } } | undefined)?.user;
+      if (trigger === "update" && typeof updated?.mustChangePassword === "boolean") {
+        token.mustChangePassword = updated.mustChangePassword;
       }
       return token;
     },
@@ -29,6 +37,7 @@ export const authConfig = {
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.departmentId = token.departmentId ?? null;
+        session.user.mustChangePassword = token.mustChangePassword ?? false;
       }
       return session;
     },
@@ -46,6 +55,12 @@ export const authConfig = {
 
       if (!isAuthenticated) {
         return false;
+      }
+
+      // Accounts created by an administrator (or whose password was reset) must
+      // set their own password before they can reach anything else.
+      if (auth?.user?.mustChangePassword && pathname !== "/profile") {
+        return Response.redirect(new URL("/profile", request.nextUrl));
       }
 
       const required = requiredPermissionsForPath(pathname);

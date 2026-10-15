@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/session";
 import { getTranslator } from "@/i18n";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChangePasswordForm } from "./change-password-form";
@@ -27,6 +28,12 @@ export default async function ProfilePage() {
         <h1 className="text-2xl font-semibold tracking-tight">{t("profile.title")}</h1>
         <p className="text-sm text-muted-foreground">{t("profile.subtitle")}</p>
       </div>
+
+      {user.mustChangePassword ? (
+        <Alert>
+          <AlertDescription>{t("profile.passwordChangeRequired")}</AlertDescription>
+        </Alert>
+      ) : null}
 
       <Card>
         <CardHeader className="flex-row items-center gap-4 space-y-0">

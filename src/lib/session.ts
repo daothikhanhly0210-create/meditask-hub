@@ -16,6 +16,7 @@ export type CurrentUser = {
   lastLoginAt: Date | null;
   createdAt: Date;
   headedDepartmentId: string | null;
+  mustChangePassword: boolean;
 };
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -46,6 +47,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     lastLoginAt: user.lastLoginAt,
     createdAt: user.createdAt,
     headedDepartmentId: user.headedDepartment?.id ?? null,
+    mustChangePassword: user.mustChangePassword,
   };
 }
 
@@ -59,6 +61,11 @@ export async function requireUser(): Promise<CurrentUser> {
 
 export async function requirePermission(permission: Permission): Promise<CurrentUser> {
   const user = await requireUser();
+  // Defence in depth alongside the proxy check (see src/auth.config.ts): an
+  // account that still has to set its own password may not run any action.
+  if (user.mustChangePassword) {
+    redirect("/profile");
+  }
   if (!can(user.role, permission)) {
     redirect("/dashboard");
   }

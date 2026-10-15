@@ -83,6 +83,8 @@ const en: typeof vi = {
   profile: {
     title: "My profile",
     subtitle: "Account information and security.",
+    passwordChangeRequired:
+      "Your account must set a new password before it can be used. Please choose your own password in the form below.",
     accountInfo: "Account information",
     security: "Security",
     changePassword: "Change password",

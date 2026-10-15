@@ -59,6 +59,14 @@ hiển thị đủ dấu tiếng Việt) hoặc **gửi email** kèm cả hai t�
 Phạm vi xem: Ban Giám đốc và Thư ký thấy mọi cuộc họp; trưởng khoa và cán bộ chỉ thấy cuộc họp
 mình tham dự hoặc có đầu việc thuộc khoa mình.
 
+## Bảo mật
+
+- Tài khoản do quản trị viên tạo (hoặc vừa được đặt lại mật khẩu) **bắt buộc tự đổi mật khẩu** ở lần
+  đăng nhập đầu tiên; trước khi đổi xong chỉ vào được trang cá nhân.
+- Mọi phản hồi kèm tiêu đề bảo mật: HSTS, chặn nhúng iframe, chặn đoán MIME, giới hạn quyền trình duyệt.
+- Phiên đăng nhập là JWT ký bằng `AUTH_SECRET` **riêng cho từng môi trường** (đổi `AUTH_SECRET` là
+  đăng xuất toàn bộ). Khoá bí mật chỉ nằm trong biến môi trường — xem `.env.example`.
+
 ## Lộ trình
 
 - [x] **B0–B1** — Đăng nhập, phân quyền, quản trị; vai trò theo phạm vi (Admin / Ban Giám đốc / Thư ký / Trưởng khoa / Cán bộ)

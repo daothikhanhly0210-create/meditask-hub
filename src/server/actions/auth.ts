@@ -3,7 +3,7 @@
 import { AuthError } from "next-auth";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { signIn, signOut } from "@/auth";
+import { signIn, signOut, unstable_update } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { recordAudit } from "@/lib/audit";
@@ -83,6 +83,10 @@ export async function changePasswordAction(
     where: { id: actor.id },
     data: { passwordHash, mustChangePassword: false },
   });
+
+  // Clear the forced-change flag in the current session token as well, so the
+  // user is not bounced back to /profile by the proxy on their next navigation.
+  await unstable_update({ user: { mustChangePassword: false } });
 
   await recordAudit({
     actorId: actor.id,

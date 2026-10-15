@@ -81,6 +81,8 @@ const vi = {
   profile: {
     title: "Trang cá nhân",
     subtitle: "Thông tin tài khoản và bảo mật.",
+    passwordChangeRequired:
+      "Tài khoản của bạn cần đổi mật khẩu trước khi sử dụng. Vui lòng đặt mật khẩu riêng của bạn ở biểu mẫu bên dưới.",
     accountInfo: "Thông tin tài khoản",
     security: "Bảo mật",
     changePassword: "Đổi mật khẩu",
