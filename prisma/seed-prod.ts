@@ -58,6 +58,15 @@ async function main() {
     });
   }
 
+  // An earlier revision seeded a company-style department set. Retire those
+  // rows (only when they have no members) so the sample data matches the
+  // hospital-style set above.
+  const legacyDepartmentCodes = ["HR", "ACC", "SALES", "ENG", "MKT"];
+  const retired = await prisma.department.deleteMany({
+    where: { code: { in: legacyDepartmentCodes }, users: { none: {} } },
+  });
+  if (retired.count > 0) console.log(`  Removed ${retired.count} legacy department(s)`);
+
   console.log("Seeding settings...");
   for (const setting of settings) {
     await prisma.setting.upsert({
