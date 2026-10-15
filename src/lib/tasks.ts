@@ -47,41 +47,67 @@ export function isOverdue(
   return date.getTime() < Date.now();
 }
 
-type SubTaskLike = { progress: number; status: string };
+/**
+ * Progress contributed by a sub-task, derived purely from its status. Staff
+ * never type a percentage — the workflow itself moves the number.
+ */
+export const SUB_TASK_STATUS_PROGRESS: Record<SubTaskStatus, number> = {
+  NEW: 0,
+  IN_PROGRESS: 50,
+  PENDING_REVIEW: 90,
+  DONE: 100,
+};
+
+export function subTaskProgress(status: string): number {
+  return isSubTaskStatus(status) ? SUB_TASK_STATUS_PROGRESS[status] : 0;
+}
+
+export function isSubTaskDone(status: string): boolean {
+  return status === "DONE";
+}
+
+/** Roll up a set of sub-task statuses into a count + derived percentage. */
+export function rollupProgress(statuses: string[]): {
+  total: number;
+  done: number;
+  progress: number;
+} {
+  const total = statuses.length;
+  if (total === 0) return { total: 0, done: 0, progress: 0 };
+  const done = statuses.filter(isSubTaskDone).length;
+  const totalProgress = statuses.reduce((sum, status) => sum + subTaskProgress(status), 0);
+  return { total, done, progress: Math.round(totalProgress / total) };
+}
+
+type SubTaskLike = { status: string };
 type TargetLike = {
-  reportedAt: Date | string | null;
+  closedAt: Date | string | null;
   subTasks: SubTaskLike[];
 };
 
-/** A target is complete when it was reported, or every sub-task is approved. */
+/** A target is complete once every sub-task is approved, or the board closes it. */
 export function isTargetComplete(target: TargetLike): boolean {
-  if (target.reportedAt) return true;
-  return target.subTasks.length > 0 && target.subTasks.every((task) => task.status === "DONE");
-}
-
-/** The system suggests reporting completion once all sub-tasks are approved. */
-export function shouldSuggestTargetReport(target: TargetLike): boolean {
-  return (
-    !target.reportedAt &&
-    target.subTasks.length > 0 &&
-    target.subTasks.every((task) => task.status === "DONE")
-  );
+  if (target.closedAt) return true;
+  return target.subTasks.length > 0 && target.subTasks.every((task) => isSubTaskDone(task.status));
 }
 
 export function targetProgress(target: TargetLike): number {
-  if (target.reportedAt) return 100;
+  if (target.closedAt) return 100;
   if (target.subTasks.length === 0) return 0;
-  const total = target.subTasks.reduce(
-    (sum, task) => sum + Math.max(0, Math.min(100, task.progress)),
-    0,
-  );
+  const total = target.subTasks.reduce((sum, task) => sum + subTaskProgress(task.status), 0);
   return Math.round(total / target.subTasks.length);
 }
 
+/** The work order pools every sub-task of every department (weighted by count). */
 export function workOrderProgress(targets: TargetLike[]): number {
   if (targets.length === 0) return 0;
-  const total = targets.reduce((sum, target) => sum + targetProgress(target), 0);
-  return Math.round(total / targets.length);
+  if (targets.every(isTargetComplete)) return 100;
+  const statuses = targets.flatMap((target) =>
+    target.closedAt ? target.subTasks.map(() => "DONE") : target.subTasks.map((task) => task.status),
+  );
+  if (statuses.length === 0) return 0;
+  const total = statuses.reduce((sum, status) => sum + subTaskProgress(status), 0);
+  return Math.round(total / statuses.length);
 }
 
 export function derivedWorkOrderStatus(
@@ -91,7 +117,7 @@ export function derivedWorkOrderStatus(
   if (storedStatus === "CANCELLED") return "CANCELLED";
   if (targets.length > 0 && targets.every(isTargetComplete)) return "DONE";
   const started = targets.some(
-    (target) => target.reportedAt != null || target.subTasks.length > 0,
+    (target) => target.closedAt != null || target.subTasks.length > 0,
   );
   return started ? "IN_PROGRESS" : "OPEN";
 }
@@ -180,4 +206,12 @@ export function canWorkOnSubTask(
 ): boolean {
   if (subTask.mainAssigneeId === user.id) return true;
   return subTask.collaborators.some((collaborator) => collaborator.userId === user.id);
+}
+
+/**
+ * Only the Board (director / secretary) may close a department that does not
+ * need to be worked on, or reopen one that was closed by mistake.
+ */
+export function canCloseTarget(user: CurrentUser): boolean {
+  return can(user.role, "task:target:close");
 }

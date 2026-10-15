@@ -24,8 +24,9 @@ export const PERMISSIONS = [
   "task:view:company", // view every task
   "task:view:department", // view every task in own department
   "task:view:assigned", // view tasks tagged to me
-  "task:update:progress", // update status / progress on my own tasks
-  "task:approve", // accept a sub-task's completion and report it up
+  "task:update:status", // start / report completion on my own tasks
+  "task:approve", // accept a sub-task's completion
+  "task:target:close", // close (or reopen) a department that needs no work
   "task:follow", // add/remove followers on a work order
   // Meetings & minutes
   "meeting:record",
@@ -49,6 +50,7 @@ const PERMISSION_MATRIX: Record<Role, readonly Permission[]> = {
     "task:view",
     "task:assign:company",
     "task:view:company",
+    "task:target:close",
     "task:follow",
     "profile:view",
   ],
@@ -57,6 +59,7 @@ const PERMISSION_MATRIX: Record<Role, readonly Permission[]> = {
     "task:view",
     "task:assign:company",
     "task:view:company",
+    "task:target:close",
     "meeting:record",
     "profile:view",
   ],
@@ -66,11 +69,11 @@ const PERMISSION_MATRIX: Record<Role, readonly Permission[]> = {
     "task:assign:department",
     "task:view:department",
     "task:view:assigned",
-    "task:update:progress",
+    "task:update:status",
     "task:approve",
     "profile:view",
   ],
-  STAFF: ["task:view", "task:view:assigned", "task:update:progress", "profile:view"],
+  STAFF: ["task:view", "task:view:assigned", "task:update:status", "profile:view"],
 };
 
 export function isRole(value: unknown): value is Role {

@@ -58,6 +58,7 @@ model User {
 
   workOrdersCreated WorkOrder[]           @relation("WorkOrderCreator")
   targetHeads       WorkOrderTarget[]     @relation("WorkOrderTargetHead")
+  targetsClosed     WorkOrderTarget[]     @relation("WorkOrderTargetClosedBy")
   subTasksAssigned  SubTask[]             @relation("SubTaskAssignee")
   subTasksCreated   SubTask[]             @relation("SubTaskCreator")
   subTasksApproved  SubTask[]             @relation("SubTaskApprover")
@@ -104,6 +105,8 @@ model AuditLog {
 //
 // Status values are stored as Strings and validated in application code
 // (see src/lib/tasks.ts), keeping the schema portable and easy to evolve.
+// Progress percentages are derived from sub-task statuses at read time; they
+// are never entered by hand or stored.
 // ---------------------------------------------------------------------------
 
 model WorkOrder {
@@ -144,9 +147,15 @@ model WorkOrderTarget {
   headId String?
   head   User?   @relation("WorkOrderTargetHead", fields: [headId], references: [id], onDelete: SetNull)
 
-  reportedAt DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  // A department the board does not need to work on (or has already closed) can
+  // be closed with a reason, which counts it as complete for the work order.
+  closedAt     DateTime?
+  closedReason String?
+  closedById   String?
+  closedBy     User?     @relation("WorkOrderTargetClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   subTasks SubTask[]
 
@@ -166,7 +175,6 @@ model SubTask {
   priority    String          @default("NORMAL")
   dueDate     DateTime?
   status      String          @default("NEW") // NEW | IN_PROGRESS | PENDING_REVIEW | DONE
-  progress    Int             @default(0) // 0..100
 
   mainAssigneeId String?
   mainAssignee   User?   @relation("SubTaskAssignee", fields: [mainAssigneeId], references: [id], onDelete: SetNull)

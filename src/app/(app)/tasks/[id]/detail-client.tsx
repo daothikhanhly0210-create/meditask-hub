@@ -8,7 +8,9 @@ import {
   Ban,
   Check,
   ChevronDown,
+  Lock,
   Pencil,
+  Play,
   Plus,
   RotateCcw,
   Trash2,
@@ -24,18 +26,20 @@ import {
   addFollowerAction,
   approveSubTaskAction,
   cancelWorkOrderAction,
+  closeTargetAction,
   deleteSubTaskAction,
   removeFollowerAction,
+  reopenTargetAction,
   reportSubTaskCompleteAction,
-  reportTargetAction,
   rejectSubTaskAction,
-  updateProgressAction,
+  startSubTaskAction,
 } from "@/server/actions/tasks";
 import type { ActionState } from "@/lib/action-state";
 import { isOverdue } from "@/lib/tasks";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { AttachmentSection } from "./attachment-section";
 import { CommentSection } from "./comment-section";
+import { ProgressReport } from "./progress-report";
 import { SubTaskDialog } from "./sub-task-dialog";
 import { WorkOrderDialog } from "../work-order-dialog";
 import type { SubTaskItem, TargetItem, WorkOrderDetail } from "../types";
@@ -83,7 +87,6 @@ function SubTaskRow({
 }) {
   const t = useTranslations();
   const [pending, startTransition] = useTransition();
-  const [progress, setProgress] = useState(String(subTask.progress));
   const [editing, setEditing] = useState(false);
 
   const overdue = isOverdue(subTask.dueDate, subTask.status === "DONE");
@@ -96,6 +99,7 @@ function SubTaskRow({
     });
   };
 
+  const start = () => act(startSubTaskAction, { subTaskId: subTask.id }, "messages.subTaskStarted");
   const approve = () => act(approveSubTaskAction, { subTaskId: subTask.id }, "messages.subTaskApproved");
   const report = () =>
     act(reportSubTaskCompleteAction, { subTaskId: subTask.id }, "messages.subTaskReported");
@@ -108,12 +112,6 @@ function SubTaskRow({
     if (!reason) return;
     act(rejectSubTaskAction, { subTaskId: subTask.id, reason }, "messages.subTaskRejected");
   };
-  const saveProgress = () =>
-    act(
-      updateProgressAction,
-      { subTaskId: subTask.id, progress },
-      "messages.progressUpdated",
-    );
 
   return (
     <div className="rounded-lg border border-border bg-background p-3">
@@ -162,8 +160,14 @@ function SubTaskRow({
         </div>
 
         <div className="flex flex-wrap items-center gap-1">
-          {subTask.canWork && subTask.status !== "DONE" && subTask.status !== "PENDING_REVIEW" ? (
-            <Button size="sm" variant="outline" disabled={pending} onClick={report}>
+          {subTask.canWork && subTask.status === "NEW" ? (
+            <Button size="sm" variant="outline" disabled={pending} onClick={start}>
+              <Play />
+              {t("tasks.startWork")}
+            </Button>
+          ) : null}
+          {subTask.canWork && (subTask.status === "NEW" || subTask.status === "IN_PROGRESS") ? (
+            <Button size="sm" disabled={pending} onClick={report}>
               <Check />
               {t("tasks.reportComplete")}
             </Button>
@@ -201,22 +205,6 @@ function SubTaskRow({
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <Progress value={subTask.progress} className="max-w-48 flex-1" />
         <span className="text-xs tabular-nums text-muted-foreground">{subTask.progress}%</span>
-        {subTask.canWork && subTask.status !== "DONE" ? (
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min={0}
-              max={100}
-              value={progress}
-              onChange={(event) => setProgress(event.target.value)}
-              className="h-8 w-20 rounded-md border border-input bg-background px-2 text-sm"
-              aria-label={t("tasks.progressLabel")}
-            />
-            <Button size="sm" variant="ghost" disabled={pending} onClick={saveProgress}>
-              {t("tasks.updateProgress")}
-            </Button>
-          </div>
-        ) : null}
       </div>
 
       <details className="mt-3 text-sm">
@@ -279,11 +267,22 @@ function TargetCard({
   const t = useTranslations();
   const [pending, startTransition] = useTransition();
   const [adding, setAdding] = useState(false);
+  const [showing, setShowing] = useState(false);
 
-  const report = () => {
+  const close = () => {
+    const reason = window.prompt(t("tasks.closeReasonPrompt"));
+    if (!reason) return;
     startTransition(async () => {
-      const result = await runAction(reportTargetAction, { targetId: target.id });
-      if (result.ok) toast.success(t(result.message ?? "messages.targetReported"));
+      const result = await runAction(closeTargetAction, { targetId: target.id, reason });
+      if (result.ok) toast.success(t(result.message ?? "messages.targetClosed"));
+      else toast.error(t(result.message ?? "messages.actionFailed"));
+    });
+  };
+
+  const reopen = () => {
+    startTransition(async () => {
+      const result = await runAction(reopenTargetAction, { targetId: target.id });
+      if (result.ok) toast.success(t(result.message ?? "messages.targetReopened"));
       else toast.error(t(result.message ?? "messages.actionFailed"));
     });
   };
@@ -294,15 +293,29 @@ function TargetCard({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">{target.departmentName}</CardTitle>
           <div className="flex flex-wrap items-center gap-2">
-            {target.reportedAt ? (
-              <Badge variant="success">{t("tasks.targetReported")}</Badge>
-            ) : target.suggestReport ? (
-              <Badge variant="warning">{t("tasks.autoSuggestDone")}</Badge>
+            {target.complete ? (
+              <Badge variant="success">
+                {target.closedAt ? t("tasks.targetClosed") : t("tasks.targetComplete")}
+              </Badge>
+            ) : (
+              <Badge variant="warning">{t("tasks.targetIncomplete")}</Badge>
+            )}
+            {target.canViewProgress ? (
+              <Button size="sm" variant="outline" onClick={() => setShowing((value) => !value)}>
+                <ChevronDown className={showing ? "rotate-180 transition-transform" : "transition-transform"} />
+                {t("tasks.viewProgress")}
+              </Button>
             ) : null}
-            {target.canReport && !target.reportedAt ? (
-              <Button size="sm" variant={target.suggestReport ? "default" : "outline"} disabled={pending} onClick={report}>
-                <Check />
-                {t("tasks.reportTarget")}
+            {target.canClose && !target.closedAt ? (
+              <Button size="sm" variant="outline" disabled={pending} onClick={close}>
+                <Lock />
+                {t("tasks.closeTarget")}
+              </Button>
+            ) : null}
+            {target.canClose && target.closedAt ? (
+              <Button size="sm" variant="outline" disabled={pending} onClick={reopen}>
+                <RotateCcw />
+                {t("tasks.reopenTarget")}
               </Button>
             ) : null}
             {target.canManage ? (
@@ -323,6 +336,12 @@ function TargetCard({
             <span className="tabular-nums">{target.progress}%</span>
           </div>
         </div>
+        {target.closedReason ? (
+          <p className="text-xs text-muted-foreground">
+            {t("tasks.closedReason")}: <span className="text-foreground/80">{target.closedReason}</span>
+            {target.closedByName ? ` · ${target.closedByName}` : ""}
+          </p>
+        ) : null}
       </CardHeader>
       <CardContent className="space-y-3">
         {target.subTasks.length === 0 ? (
@@ -338,6 +357,15 @@ function TargetCard({
             />
           ))
         )}
+
+        {showing && target.canViewProgress ? (
+          <div className="rounded-lg border border-dashed border-border p-3">
+            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {t("tasks.progressReport")}
+            </h4>
+            <ProgressReport target={target} locale={locale} />
+          </div>
+        ) : null}
       </CardContent>
 
       {adding ? (

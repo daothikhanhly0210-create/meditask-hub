@@ -5,8 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission, type CurrentUser } from "@/lib/session";
 import { recordAudit } from "@/lib/audit";
 import {
+  closeTargetSchema,
   commentSchema,
-  progressSchema,
   rejectSubTaskSchema,
   subTaskSchema,
   toFieldErrors,
@@ -118,8 +118,8 @@ async function recomputeWorkOrderStatus(workOrderId: string) {
       status: true,
       targets: {
         select: {
-          reportedAt: true,
-          subTasks: { select: { progress: true, status: true } },
+          closedAt: true,
+          subTasks: { select: { status: true } },
         },
       },
     },
@@ -127,7 +127,7 @@ async function recomputeWorkOrderStatus(workOrderId: string) {
   if (!workOrder) return;
 
   const targets = workOrder.targets.map((target) => ({
-    reportedAt: target.reportedAt,
+    closedAt: target.closedAt,
     subTasks: target.subTasks,
   }));
   const next = derivedWorkOrderStatus(targets, workOrder.status);
@@ -440,7 +440,6 @@ export async function createSubTaskAction(
         priority: parsed.data.priority,
         dueDate: parseDueDate(parsed.data.dueDate),
         status: "NEW",
-        progress: 0,
         mainAssigneeId,
         createdById: actor.id,
         collaborators: {
@@ -564,44 +563,32 @@ export async function deleteSubTaskAction(
   }
 }
 
-export async function updateProgressAction(
+/** Staff mark a sub-task as started; progress is derived from the status. */
+export async function startSubTaskAction(
   _prev: ActionState | undefined,
   formData: FormData,
 ): Promise<ActionState> {
   const actor = await requireTaskUser();
-  const parsed = progressSchema.safeParse({
-    subTaskId: readText(formData, "subTaskId"),
-    progress: readText(formData, "progress"),
-  });
-  if (!parsed.success) {
-    return { ok: false, message: "messages.invalidData", fieldErrors: toFieldErrors(parsed.error) };
-  }
+  const subTaskId = readText(formData, "subTaskId");
+  if (!subTaskId) return errorState("messages.invalidData");
 
-  const subTask = await loadSubTaskContext(parsed.data.subTaskId);
+  const subTask = await loadSubTaskContext(subTaskId);
   if (!subTask) return errorState("errors.generic");
-
-  const owns = canWorkOnSubTask(actor, subTask);
-  const manages = managesTarget(actor, subTask.target);
-  if (!owns && !manages) return errorState("messages.forbidden");
-
-  const progress = parsed.data.progress;
-  const status =
-    subTask.status === "NEW" && progress > 0
-      ? "IN_PROGRESS"
-      : subTask.status === "PENDING_REVIEW"
-        ? "IN_PROGRESS"
-        : subTask.status;
+  if (!canWorkOnSubTask(actor, subTask) && !managesTarget(actor, subTask.target)) {
+    return errorState("messages.forbidden");
+  }
+  if (subTask.status !== "NEW") return successState("messages.subTaskStarted");
 
   try {
     await prisma.subTask.update({
       where: { id: subTask.id },
-      data: { progress, status },
+      data: { status: "IN_PROGRESS" },
     });
     await recomputeWorkOrderStatus(subTask.target.workOrderId);
     revalidateWorkOrder(subTask.target.workOrderId);
-    return successState("messages.progressUpdated");
+    return successState("messages.subTaskStarted");
   } catch (error) {
-    console.error("[tasks] update progress failed", error);
+    console.error("[tasks] start sub-task failed", error);
     return errorState("messages.actionFailed");
   }
 }
@@ -623,7 +610,7 @@ export async function reportSubTaskCompleteAction(
   try {
     await prisma.subTask.update({
       where: { id: subTask.id },
-      data: { status: "PENDING_REVIEW", progress: 100 },
+      data: { status: "PENDING_REVIEW" },
     });
     await recordAudit({
       actorId: actor.id,
@@ -656,7 +643,6 @@ export async function approveSubTaskAction(
       where: { id: subTask.id },
       data: {
         status: "DONE",
-        progress: 100,
         approvedById: actor.id,
         approvedAt: new Date(),
         completedAt: new Date(),
@@ -714,42 +700,90 @@ export async function rejectSubTaskAction(
   }
 }
 
-export async function reportTargetAction(
+/**
+ * The Board closes a department that does not need to be worked on. A closed
+ * department counts as complete, so the work order can still reach 100%.
+ */
+export async function closeTargetAction(
   _prev: ActionState | undefined,
   formData: FormData,
 ): Promise<ActionState> {
-  const actor = await requireTaskUser();
+  const actor = await requirePermission("task:target:close");
+  const parsed = closeTargetSchema.safeParse({
+    targetId: readText(formData, "targetId"),
+    reason: readText(formData, "reason"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: "messages.invalidData", fieldErrors: toFieldErrors(parsed.error) };
+  }
+
+  const target = await prisma.workOrderTarget.findUnique({
+    where: { id: parsed.data.targetId },
+    select: { id: true, workOrderId: true },
+  });
+  if (!target) return errorState("errors.generic");
+
+  const visible = await loadVisibleWorkOrder(actor, target.workOrderId);
+  if (!visible) return errorState("messages.forbidden");
+
+  try {
+    await prisma.workOrderTarget.update({
+      where: { id: target.id },
+      data: {
+        closedAt: new Date(),
+        closedReason: parsed.data.reason,
+        closedById: actor.id,
+      },
+    });
+    await recordAudit({
+      actorId: actor.id,
+      action: "work_order_target.close",
+      entity: "WorkOrderTarget",
+      entityId: target.id,
+      meta: { reason: parsed.data.reason },
+    });
+    await recomputeWorkOrderStatus(target.workOrderId);
+    revalidateWorkOrder(target.workOrderId);
+    return successState("messages.targetClosed");
+  } catch (error) {
+    console.error("[tasks] close target failed", error);
+    return errorState("messages.actionFailed");
+  }
+}
+
+export async function reopenTargetAction(
+  _prev: ActionState | undefined,
+  formData: FormData,
+): Promise<ActionState> {
+  const actor = await requirePermission("task:target:close");
   const targetId = readText(formData, "targetId");
   if (!targetId) return errorState("messages.invalidData");
 
   const target = await prisma.workOrderTarget.findUnique({
     where: { id: targetId },
-    select: { id: true, departmentId: true, headId: true, workOrderId: true },
+    select: { id: true, workOrderId: true },
   });
   if (!target) return errorState("errors.generic");
 
-  const workOrder = await loadVisibleWorkOrder(actor, target.workOrderId);
-  if (!workOrder) return errorState("messages.forbidden");
-  if (!managesTarget(actor, target) && actor.role !== "DIRECTOR" && actor.role !== "SECRETARY") {
-    return errorState("messages.forbidden");
-  }
+  const visible = await loadVisibleWorkOrder(actor, target.workOrderId);
+  if (!visible) return errorState("messages.forbidden");
 
   try {
     await prisma.workOrderTarget.update({
       where: { id: target.id },
-      data: { reportedAt: new Date() },
+      data: { closedAt: null, closedReason: null, closedById: null },
     });
     await recordAudit({
       actorId: actor.id,
-      action: "work_order_target.report",
+      action: "work_order_target.reopen",
       entity: "WorkOrderTarget",
       entityId: target.id,
     });
     await recomputeWorkOrderStatus(target.workOrderId);
     revalidateWorkOrder(target.workOrderId);
-    return successState("messages.targetReported");
+    return successState("messages.targetReopened");
   } catch (error) {
-    console.error("[tasks] report target failed", error);
+    console.error("[tasks] reopen target failed", error);
     return errorState("messages.actionFailed");
   }
 }

@@ -60,10 +60,13 @@ export type TargetItem = {
   departmentName: string;
   head: PersonRef | null;
   progress: number;
-  reportedAt: string | null;
-  suggestReport: boolean;
+  complete: boolean;
+  closedAt: string | null;
+  closedReason: string | null;
+  closedByName: string | null;
+  canClose: boolean;
+  canViewProgress: boolean;
   canManage: boolean;
-  canReport: boolean;
   members: { id: string; name: string }[];
   subTasks: SubTaskItem[];
 };

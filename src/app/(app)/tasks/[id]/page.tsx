@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/session";
 import { getTranslator } from "@/i18n";
 import {
+  canCloseTarget,
   canCreateWorkOrder,
   canFollowWorkOrder,
   canWorkOnSubTask,
@@ -10,8 +11,9 @@ import {
   isOverdue,
   isPriority,
   isSubTaskStatus,
+  isTargetComplete,
   managesTarget,
-  shouldSuggestTargetReport,
+  subTaskProgress,
   targetProgress,
   workOrderProgress,
   workOrderScope,
@@ -92,6 +94,7 @@ export default async function WorkOrderDetailPage({
         include: {
           department: { select: { id: true, name: true } },
           head: { select: { id: true, name: true } },
+          closedBy: { select: { id: true, name: true } },
           subTasks: {
             orderBy: { createdAt: "asc" },
             include: {
@@ -141,6 +144,7 @@ export default async function WorkOrderDetailPage({
   }
 
   const follow = canFollowWorkOrder(user);
+  const closeAllowed = canCloseTarget(user);
   const followerIds = new Set(workOrder.followers.map((follower) => follower.userId));
   const followerOptions = follow
     ? (
@@ -156,9 +160,8 @@ export default async function WorkOrderDetailPage({
 
   const targets: TargetItem[] = workOrder.targets.map((target) => {
     const targetLike = {
-      reportedAt: target.reportedAt,
+      closedAt: target.closedAt,
       subTasks: target.subTasks.map((subTask) => ({
-        progress: subTask.progress,
         status: subTask.status,
       })),
     };
@@ -174,7 +177,7 @@ export default async function WorkOrderDetailPage({
       status: isSubTaskStatus(subTask.status) ? subTask.status : "NEW",
       priority: isPriority(subTask.priority) ? subTask.priority : "NORMAL",
       dueDate: subTask.dueDate ? subTask.dueDate.toISOString() : null,
-      progress: subTask.progress,
+      progress: subTaskProgress(subTask.status),
       mainAssignee: subTask.mainAssignee
         ? { id: subTask.mainAssignee.id, name: subTask.mainAssignee.name }
         : null,
@@ -184,7 +187,6 @@ export default async function WorkOrderDetailPage({
       })),
       createdByName: subTask.createdBy.name,
       rejectReason: subTask.rejectReason,
-      approvedByName: subTask.approvedBy?.name ?? null,
       overdue: isOverdue(subTask.dueDate, subTask.status === "DONE"),
       comments: subTask.comments.map(toComment),
       attachments: subTask.attachments.map(toAttachment),
@@ -198,19 +200,21 @@ export default async function WorkOrderDetailPage({
       departmentName: target.department.name,
       head: target.head ? { id: target.head.id, name: target.head.name } : null,
       progress: targetProgress(targetLike),
-      reportedAt: target.reportedAt ? target.reportedAt.toISOString() : null,
-      suggestReport: shouldSuggestTargetReport(targetLike),
+      complete: isTargetComplete(targetLike),
+      closedAt: target.closedAt ? target.closedAt.toISOString() : null,
+      closedReason: target.closedReason,
+      closedByName: target.closedBy?.name ?? null,
+      canClose: closeAllowed,
+      canViewProgress: isBoard || canManage,
       canManage,
-      canReport: canManage || isBoard,
       members: membersByDepartment.get(target.departmentId) ?? [],
       subTasks,
     };
   });
 
   const overallTargets = workOrder.targets.map((target) => ({
-    reportedAt: target.reportedAt,
+    closedAt: target.closedAt,
     subTasks: target.subTasks.map((subTask) => ({
-      progress: subTask.progress,
       status: subTask.status,
     })),
   }));

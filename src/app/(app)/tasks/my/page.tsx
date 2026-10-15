@@ -8,6 +8,7 @@ import {
   isPriority,
   isSubTaskStatus,
   managesTarget,
+  subTaskProgress,
 } from "@/lib/tasks";
 import type { Prisma } from "@prisma/client";
 import { MyWorkClient } from "./my-work-client";
@@ -50,7 +51,7 @@ export default async function MyWorkPage() {
     title: subTask.title,
     status: isSubTaskStatus(subTask.status) ? subTask.status : "NEW",
     priority: isPriority(subTask.priority) ? subTask.priority : "NORMAL",
-    progress: subTask.progress,
+    progress: subTaskProgress(subTask.status),
     dueDate: subTask.dueDate ? subTask.dueDate.toISOString() : null,
     overdue: isOverdue(subTask.dueDate, subTask.status === "DONE"),
     workOrderId: subTask.target.workOrder.id,

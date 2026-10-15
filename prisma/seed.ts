@@ -194,7 +194,6 @@ async function main() {
             priority: "HIGH",
             dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
             status: "IN_PROGRESS",
-            progress: 40,
             mainAssigneeId: staff.id,
             createdById: head.id,
           },
@@ -206,7 +205,6 @@ async function main() {
             priority: "NORMAL",
             dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
             status: "NEW",
-            progress: 0,
             mainAssigneeId: staff.id,
             createdById: head.id,
           },
@@ -215,7 +213,7 @@ async function main() {
     }
 
     if (director && pharmacy) {
-      await prisma.workOrder.create({
+      const second = await prisma.workOrder.create({
         data: {
           code: `PGV-${year}-002`,
           title: "Báo cáo tình hình sử dụng thuốc quý",
@@ -225,10 +223,28 @@ async function main() {
           status: "DONE",
           closedAt: new Date(),
           createdById: director.id,
-          targets: { create: [{ departmentId: pharmacy, reportedAt: new Date() }] },
+          targets: { create: [{ departmentId: pharmacy }] },
           followers: secretary ? { create: [{ userId: secretary.id }] } : undefined,
         },
+        select: { targets: { select: { id: true } } },
       });
+
+      const pharmacyTarget = second.targets[0];
+      if (pharmacyTarget) {
+        await prisma.subTask.create({
+          data: {
+            targetId: pharmacyTarget.id,
+            title: "Tổng hợp số liệu sử dụng thuốc và tồn kho",
+            priority: "NORMAL",
+            dueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+            status: "DONE",
+            completedAt: new Date(),
+            approvedById: director.id,
+            approvedAt: new Date(),
+            createdById: director.id,
+          },
+        });
+      }
     }
   }
 

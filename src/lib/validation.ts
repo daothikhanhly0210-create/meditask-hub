@@ -82,13 +82,9 @@ export const subTaskSchema = z.object({
   collaboratorIds: z.array(z.string().min(1)),
 });
 
-export const progressSchema = z.object({
-  subTaskId: z.string().min(1),
-  progress: z.coerce
-    .number()
-    .int()
-    .min(0, "validation.progressRange")
-    .max(100, "validation.progressRange"),
+export const closeTargetSchema = z.object({
+  targetId: z.string().min(1),
+  reason: z.string().trim().min(2, "validation.closeReasonRequired").max(500),
 });
 
 export const commentSchema = z

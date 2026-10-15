@@ -24,8 +24,8 @@ export default async function TasksPage() {
         targets: {
           select: {
             department: { select: { name: true } },
-            reportedAt: true,
-            subTasks: { select: { progress: true, status: true } },
+            closedAt: true,
+            subTasks: { select: { status: true } },
           },
         },
       },
@@ -38,7 +38,7 @@ export default async function TasksPage() {
 
   const rows: WorkOrderListItem[] = workOrders.map((workOrder) => {
     const targets = workOrder.targets.map((target) => ({
-      reportedAt: target.reportedAt,
+      closedAt: target.closedAt,
       subTasks: target.subTasks,
     }));
     return {
