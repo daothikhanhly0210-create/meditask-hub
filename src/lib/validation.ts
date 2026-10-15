@@ -56,6 +56,60 @@ export const departmentSchema = z.object({
   headId: optionalText(50),
 });
 
+export const prioritySchema = z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]);
+
+const taskTitle = z
+  .string()
+  .trim()
+  .min(2, "validation.titleTooShort")
+  .max(200, "validation.titleTooLong");
+
+export const workOrderSchema = z.object({
+  title: taskTitle,
+  description: optionalText(2000),
+  priority: prioritySchema,
+  dueDate: optionalText(30),
+  departmentIds: z.array(z.string().min(1)).min(1, "validation.departmentRequired"),
+});
+
+export const subTaskSchema = z.object({
+  targetId: z.string().min(1),
+  title: taskTitle,
+  description: optionalText(2000),
+  priority: prioritySchema,
+  dueDate: optionalText(30),
+  mainAssigneeId: optionalText(50),
+  collaboratorIds: z.array(z.string().min(1)),
+});
+
+export const progressSchema = z.object({
+  subTaskId: z.string().min(1),
+  progress: z.coerce
+    .number()
+    .int()
+    .min(0, "validation.progressRange")
+    .max(100, "validation.progressRange"),
+});
+
+export const commentSchema = z
+  .object({
+    workOrderId: optionalText(50),
+    subTaskId: optionalText(50),
+    body: z.string().trim().min(1, "validation.commentRequired").max(2000, "validation.commentTooLong"),
+  })
+  .refine((value) => Boolean(value.workOrderId) !== Boolean(value.subTaskId), {
+    message: "messages.invalidData",
+  });
+
+export const rejectSubTaskSchema = z.object({
+  subTaskId: z.string().min(1),
+  reason: z.string().trim().min(2, "validation.rejectReasonRequired").max(500),
+});
+
+export type WorkOrderInput = z.infer<typeof workOrderSchema>;
+export type SubTaskInput = z.infer<typeof subTaskSchema>;
+export type CommentInput = z.infer<typeof commentSchema>;
+
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type DepartmentInput = z.infer<typeof departmentSchema>;

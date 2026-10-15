@@ -1,6 +1,8 @@
 import {
   Building2,
+  ClipboardList,
   LayoutDashboard,
+  ListChecks,
   UserCircle,
   Users,
   type LucideIcon,
@@ -23,6 +25,13 @@ export const navGroups: NavGroup[] = [
   {
     key: "nav.groups.main",
     items: [{ key: "nav.dashboard", href: "/dashboard", icon: LayoutDashboard }],
+  },
+  {
+    key: "nav.groups.work",
+    items: [
+      { key: "nav.workOrders", href: "/tasks", icon: ClipboardList, permission: "task:view" },
+      { key: "nav.myWork", href: "/tasks/my", icon: ListChecks, permission: "task:view" },
+    ],
   },
   {
     key: "nav.groups.administration",

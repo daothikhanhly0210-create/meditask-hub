@@ -29,6 +29,8 @@ model Department {
 
   users User[] @relation("DepartmentMembers")
 
+  workOrderTargets WorkOrderTarget[]
+
   @@map("departments")
 }
 
@@ -53,6 +55,16 @@ model User {
   updatedAt   DateTime  @updatedAt
 
   auditLogs AuditLog[]
+
+  workOrdersCreated WorkOrder[]           @relation("WorkOrderCreator")
+  targetHeads       WorkOrderTarget[]     @relation("WorkOrderTargetHead")
+  subTasksAssigned  SubTask[]             @relation("SubTaskAssignee")
+  subTasksCreated   SubTask[]             @relation("SubTaskCreator")
+  subTasksApproved  SubTask[]             @relation("SubTaskApprover")
+  subTaskWork       SubTaskCollaborator[] @relation("SubTaskCollaborator")
+  workOrderFollows  WorkOrderFollower[]   @relation("WorkOrderFollower")
+  comments          Comment[]             @relation("CommentAuthor")
+  attachments       Attachment[]          @relation("AttachmentUploader")
 
   @@index([departmentId])
   @@index([role])
@@ -80,4 +92,167 @@ model AuditLog {
   @@index([actorId])
   @@index([entity, entityId])
   @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// B2 — Work assignment (two tiers)
+//
+//   WorkOrder (phiếu giao việc, board -> many departments)
+//     └── WorkOrderTarget (one row per department in the work order)
+//           └── SubTask (việc chi tiết, department head -> staff)
+//                 └── SubTaskCollaborator (cán bộ phối hợp)
+//
+// Status values are stored as Strings and validated in application code
+// (see src/lib/tasks.ts), keeping the schema portable and easy to evolve.
+// ---------------------------------------------------------------------------
+
+model WorkOrder {
+  id          String    @id @default(cuid())
+  code        String    @unique // human code, e.g. PGV-2026-001
+  title       String
+  description String?
+  priority    String    @default("NORMAL") // LOW | NORMAL | HIGH | URGENT
+  dueDate     DateTime?
+  status      String    @default("OPEN") // OPEN | IN_PROGRESS | DONE | CANCELLED
+  closedAt    DateTime?
+
+  createdById String
+  createdBy   User   @relation("WorkOrderCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  targets     WorkOrderTarget[]
+  followers   WorkOrderFollower[]
+  comments    Comment[]
+  attachments Attachment[]
+
+  @@index([createdById])
+  @@index([status])
+  @@map("work_orders")
+}
+
+model WorkOrderTarget {
+  id          String    @id @default(cuid())
+  workOrderId String
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  // Department head in charge at the time the target was created.
+  headId String?
+  head   User?   @relation("WorkOrderTargetHead", fields: [headId], references: [id], onDelete: SetNull)
+
+  reportedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  subTasks SubTask[]
+
+  @@unique([workOrderId, departmentId])
+  @@index([departmentId])
+  @@index([headId])
+  @@map("work_order_targets")
+}
+
+model SubTask {
+  id          String          @id @default(cuid())
+  targetId    String
+  target      WorkOrderTarget @relation(fields: [targetId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  priority    String          @default("NORMAL")
+  dueDate     DateTime?
+  status      String          @default("NEW") // NEW | IN_PROGRESS | PENDING_REVIEW | DONE
+  progress    Int             @default(0) // 0..100
+
+  mainAssigneeId String?
+  mainAssignee   User?   @relation("SubTaskAssignee", fields: [mainAssigneeId], references: [id], onDelete: SetNull)
+
+  createdById String
+  createdBy   User   @relation("SubTaskCreator", fields: [createdById], references: [id])
+
+  approvedById String?
+  approvedBy   User?     @relation("SubTaskApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedAt   DateTime?
+  rejectReason String?
+  completedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  collaborators SubTaskCollaborator[]
+  comments      Comment[]
+  attachments   Attachment[]
+
+  @@index([targetId])
+  @@index([mainAssigneeId])
+  @@index([status])
+  @@map("sub_tasks")
+}
+
+model SubTaskCollaborator {
+  id        String  @id @default(cuid())
+  subTaskId String
+  subTask   SubTask @relation(fields: [subTaskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation("SubTaskCollaborator", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([subTaskId, userId])
+  @@index([userId])
+  @@map("sub_task_collaborators")
+}
+
+model WorkOrderFollower {
+  id          String    @id @default(cuid())
+  workOrderId String
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation("WorkOrderFollower", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([workOrderId, userId])
+  @@index([userId])
+  @@map("work_order_followers")
+}
+
+model Comment {
+  id          String     @id @default(cuid())
+  workOrderId String?
+  workOrder   WorkOrder? @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  subTaskId   String?
+  subTask     SubTask?   @relation(fields: [subTaskId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation("CommentAuthor", fields: [authorId], references: [id])
+  body     String
+
+  createdAt DateTime @default(now())
+
+  @@index([workOrderId])
+  @@index([subTaskId])
+  @@map("comments")
+}
+
+model Attachment {
+  id          String     @id @default(cuid())
+  workOrderId String?
+  workOrder   WorkOrder? @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  subTaskId   String?
+  subTask     SubTask?   @relation(fields: [subTaskId], references: [id], onDelete: Cascade)
+
+  fileName     String
+  mimeType     String
+  size         Int
+  data         Bytes
+  uploadedById String
+  uploadedBy   User     @relation("AttachmentUploader", fields: [uploadedById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([workOrderId])
+  @@index([subTaskId])
+  @@map("attachments")
 }

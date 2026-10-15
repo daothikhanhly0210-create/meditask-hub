@@ -136,6 +136,102 @@ async function main() {
     await prisma.department.update({ where: { id: outpatient }, data: { headId: head.id } });
   }
 
+  // Demo work-assignment data (B2). Only seeded into an empty task table so
+  // real data is never touched by re-running the seed.
+  console.log("Seeding demo work orders...");
+  const existingWorkOrders = await prisma.workOrder.count();
+  if (existingWorkOrders === 0) {
+    const year = new Date().getFullYear();
+    const director = await prisma.user.findUnique({
+      where: { email: "director@director.company.local" },
+    });
+    const secretary = await prisma.user.findUnique({
+      where: { email: "secretary@secretary.company.local" },
+    });
+    const staff = await prisma.user.findUnique({
+      where: { email: "staff@staff.company.local" },
+    });
+    const outpatient = departmentIdByCode.get("KKB");
+    const pharmacy = departmentIdByCode.get("DUOC");
+
+    if (director && head && staff && outpatient && pharmacy) {
+      const first = await prisma.workOrder.create({
+        data: {
+          code: `PGV-${year}-001`,
+          title: "Rà soát quy trình tiếp đón bệnh nhân",
+          description:
+            "Đánh giá thời gian chờ, biểu mẫu và luồng tiếp đón tại khu vực khám bệnh.",
+          priority: "HIGH",
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          status: "IN_PROGRESS",
+          createdById: director.id,
+          targets: {
+            create: [
+              { departmentId: outpatient, headId: head.id },
+              { departmentId: pharmacy, headId: null },
+            ],
+          },
+          comments: {
+            create: [
+              {
+                authorId: director.id,
+                body: "Ưu tiên hoàn thành trước cuộc họp giao ban tuần sau.",
+              },
+            ],
+          },
+        },
+        select: { targets: { select: { id: true, departmentId: true } } },
+      });
+
+      const outpatientTarget = first.targets.find(
+        (target) => target.departmentId === outpatient,
+      );
+      if (outpatientTarget) {
+        await prisma.subTask.create({
+          data: {
+            targetId: outpatientTarget.id,
+            title: "Khảo sát thời gian chờ tại quầy tiếp đón",
+            priority: "HIGH",
+            dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+            status: "IN_PROGRESS",
+            progress: 40,
+            mainAssigneeId: staff.id,
+            createdById: head.id,
+          },
+        });
+        await prisma.subTask.create({
+          data: {
+            targetId: outpatientTarget.id,
+            title: "Cập nhật biểu mẫu tiếp đón",
+            priority: "NORMAL",
+            dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+            status: "NEW",
+            progress: 0,
+            mainAssigneeId: staff.id,
+            createdById: head.id,
+          },
+        });
+      }
+    }
+
+    if (director && pharmacy) {
+      await prisma.workOrder.create({
+        data: {
+          code: `PGV-${year}-002`,
+          title: "Báo cáo tình hình sử dụng thuốc quý",
+          description: "Tổng hợp số liệu sử dụng thuốc và tồn kho của Khoa Dược.",
+          priority: "NORMAL",
+          dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+          status: "DONE",
+          closedAt: new Date(),
+          createdById: director.id,
+          targets: { create: [{ departmentId: pharmacy, reportedAt: new Date() }] },
+          followers: secretary ? { create: [{ userId: secretary.id }] } : undefined,
+        },
+      });
+    }
+  }
+
   console.log("Seeding settings...");
   for (const setting of settings) {
     await prisma.setting.upsert({

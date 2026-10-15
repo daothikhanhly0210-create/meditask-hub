@@ -24,16 +24,21 @@ npm run dev              # http://localhost:3000
 
 ## Cấu trúc công việc (2 tầng)
 
-1. **Phiếu giao việc** — Ban Giám đốc/Thư ký tạo và giao cho một hoặc nhiều trưởng khoa.
+1. **Phiếu giao việc** — Ban Giám đốc/Thư ký tạo và giao cho một hoặc nhiều khoa/phòng.
+   Mã phiếu tự sinh theo mẫu `PGV-NĂM-STT` (VD `PGV-2026-001`).
 2. **Sub-task** — trưởng khoa chia nhỏ phiếu, giao cho **1 cán bộ chính + nhiều người phối hợp**.
 
+Mỗi phiếu và mỗi sub-task đều có **bình luận** và **tệp đính kèm** (tối đa 20 MB).
+Giám đốc có thể thêm **người theo dõi** cho phiếu; trưởng khoa **báo cáo hoàn thành** khoa mình.
+
 Vòng đời: `MỚI → ĐANG LÀM → CHỜ DUYỆT → HOÀN THÀNH` (kèm % tiến độ) · quá hạn tự gắn 🔴 ·
-nghiệm thu **2 bước** (cán bộ báo *Chờ duyệt* → trưởng khoa xác nhận *Hoàn thành*).
+nghiệm thu **2 bước** (cán bộ báo *Chờ duyệt* → trưởng khoa xác nhận *Hoàn thành*) ·
+khi mọi khoa nghiệm thu xong, phiếu **tự chuyển Hoàn thành**.
 
 ## Lộ trình
 
 - [x] **B0–B1** — Đăng nhập, phân quyền, quản trị; vai trò theo phạm vi (Admin / Ban Giám đốc / Thư ký / Trưởng khoa / Cán bộ)
-- [ ] **B2** — Công việc: phiếu giao việc → sub-task, nghiệm thu 2 bước, cảnh báo quá hạn
+- [x] **B2** — Công việc: phiếu giao việc → sub-task, nghiệm thu 2 bước, bình luận, tệp đính kèm, người theo dõi, cảnh báo quá hạn
 - [ ] **B3** — Báo cáo: toàn viện / khoa, xếp hạng cán bộ, xu hướng
 - [ ] **B4** — Ghi âm – Biên bản
 - [ ] **B5** — Thông báo (trong app + email)

@@ -18,6 +18,7 @@ export const PERMISSIONS = [
   "report:department", // detailed progress of own department
   "report:overview", // aggregate counts only, no task content
   // Tasks
+  "task:view", // enter the work-assignment module (all task roles, not ADMIN)
   "task:assign:company", // create work orders and assign to department heads
   "task:assign:department", // break work down into sub-tasks in own department
   "task:view:company", // view every task
@@ -43,10 +44,25 @@ export type Permission = (typeof PERMISSIONS)[number];
  */
 const PERMISSION_MATRIX: Record<Role, readonly Permission[]> = {
   ADMIN: ["user:manage", "department:manage", "settings:manage", "report:overview", "profile:view"],
-  DIRECTOR: ["report:company", "task:assign:company", "task:view:company", "task:follow", "profile:view"],
-  SECRETARY: ["report:company", "task:assign:company", "task:view:company", "meeting:record", "profile:view"],
+  DIRECTOR: [
+    "report:company",
+    "task:view",
+    "task:assign:company",
+    "task:view:company",
+    "task:follow",
+    "profile:view",
+  ],
+  SECRETARY: [
+    "report:company",
+    "task:view",
+    "task:assign:company",
+    "task:view:company",
+    "meeting:record",
+    "profile:view",
+  ],
   DEPT_HEAD: [
     "report:department",
+    "task:view",
     "task:assign:department",
     "task:view:department",
     "task:view:assigned",
@@ -54,7 +70,7 @@ const PERMISSION_MATRIX: Record<Role, readonly Permission[]> = {
     "task:approve",
     "profile:view",
   ],
-  STAFF: ["task:view:assigned", "task:update:progress", "profile:view"],
+  STAFF: ["task:view", "task:view:assigned", "task:update:progress", "profile:view"],
 };
 
 export function isRole(value: unknown): value is Role {
@@ -82,5 +98,6 @@ export function requiredPermissionForPath(pathname: string): Permission | null {
   if (pathname.startsWith("/admin/users")) return "user:manage";
   if (pathname.startsWith("/admin/departments")) return "department:manage";
   if (pathname.startsWith("/admin")) return "settings:manage";
+  if (pathname.startsWith("/tasks")) return "task:view";
   return null;
 }
