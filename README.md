@@ -16,18 +16,6 @@ npm run db:setup         # tạo bảng + dữ liệu mẫu
 npm run dev              # http://localhost:3000
 ```
 
-## Tài khoản demo
-
-Mật khẩu chung `Demo@12345` — mỗi vai trò một email riêng:
-
-| Vai trò | Email |
-|---|---|
-| Quản trị viên | `admin@admin.company.local` |
-| Ban Giám đốc | `director@director.company.local` |
-| Thư ký | `secretary@secretary.company.local` |
-| Trưởng khoa | `head@head.company.local` |
-| Cán bộ | `staff@staff.company.local` |
-
 ## Vai trò
 
 - **Quản trị viên** — quản lý tài khoản và khoa/phòng; không tham gia giao việc.
