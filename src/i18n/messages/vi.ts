@@ -44,7 +44,7 @@ const vi = {
     ADMIN: "Quản trị viên",
     DIRECTOR: "Ban Giám đốc",
     SECRETARY: "Thư ký",
-    DEPT_HEAD: "Trưởng khoa/phòng",
+    DEPT_HEAD: "Trưởng khoa",
     STAFF: "Cán bộ",
   },
   nav: {
@@ -105,7 +105,7 @@ const vi = {
     status: "Trạng thái",
     code: "Mã khoa/phòng",
     description: "Mô tả",
-    head: "Trưởng khoa/phòng",
+    head: "Trưởng khoa",
     members: "Số cán bộ",
     createdAt: "Ngày tạo",
     lastLogin: "Đăng nhập lần cuối",
@@ -114,7 +114,7 @@ const vi = {
     usersTitle: "Quản lý người dùng",
     usersSubtitle: "Tạo tài khoản, gán vai trò và khoa/phòng.",
     departmentsTitle: "Quản lý khoa/phòng",
-    departmentsSubtitle: "Tạo khoa/phòng và chỉ định trưởng khoa/phòng.",
+    departmentsSubtitle: "Tạo khoa/phòng và chỉ định trưởng khoa.",
     newUser: "Thêm người dùng",
     editUser: "Chỉnh sửa người dùng",
     newDepartment: "Thêm khoa/phòng",
@@ -137,7 +137,7 @@ const vi = {
     cannotChangeOwnRole:
       "Bạn không thể tự đổi vai trò hoặc tự khóa tài khoản của mình.",
     cannotDeleteDepartmentInUse:
-      "Không thể xóa: khoa/phòng vẫn còn cán bộ hoặc trưởng khoa/phòng. Hãy chuyển họ trước.",
+      "Không thể xóa: khoa/phòng vẫn còn cán bộ hoặc trưởng khoa. Hãy chuyển họ trước.",
     deleteUserConfirm: "Xóa vĩnh viễn tài khoản {name}?",
     deleteDepartmentConfirm: "Xóa khoa/phòng {name}?",
   },

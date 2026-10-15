@@ -31,7 +31,7 @@ Mật khẩu chung: **`Demo@12345`** — mỗi vai trò một đuôi email riên
 | Quản trị viên | `admin@admin.company.local` |
 | Ban Giám đốc | `director@director.company.local` |
 | Thư ký | `secretary@secretary.company.local` |
-| Trưởng khoa/phòng | `head@head.company.local` |
+| Trưởng khoa | `head@head.company.local` |
 | Cán bộ | `staff@staff.company.local` |
 
 Dữ liệu mẫu gồm 5 khoa/phòng (Admin sửa được): Khoa Khám bệnh, Phòng Kế hoạch tổng
@@ -39,7 +39,7 @@ hợp, Phòng Tổ chức cán bộ, Khoa Dược, Khoa Xét nghiệm.
 
 ## Phân quyền (thiết kế đã chốt)
 
-| Chức năng | Admin | Ban GĐ | Thư ký | Trưởng khoa/phòng | Cán bộ |
+| Chức năng | Admin | Ban GĐ | Thư ký | Trưởng khoa | Cán bộ |
 |---|:-:|:-:|:-:|:-:|:-:|
 | Quản lý tài khoản & khoa/phòng | ✅ | – | – | – | – |
 | Xem báo cáo **chi tiết** toàn viện | 🚫 | ✅ | ✅ | – | – |
