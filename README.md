@@ -3,9 +3,7 @@
 Ứng dụng nội bộ cho bệnh viện: ghi âm cuộc họp, tạo biên bản, giao việc theo khoa/phòng
 và theo dõi tiến độ. Giao diện tiếng Việt (mặc định) + tiếng Anh.
 
-- **Công nghệ:** Next.js 16 · TypeScript · Tailwind 4 · Prisma 6 + PostgreSQL (Neon) · Auth.js v5
-- **Trạng thái:** đã có đăng nhập, phân quyền và quản trị; module Công việc / Báo cáo /
-  Ghi âm – Biên bản đang triển khai.
+**Công nghệ:** Next.js 16 · TypeScript · Tailwind 4 · Prisma 6 + PostgreSQL (Neon) · Auth.js v5
 
 ## Chạy dự án
 
@@ -24,9 +22,18 @@ npm run dev              # http://localhost:3000
 - **Trưởng khoa** — chia nhỏ thành sub-task cho cán bộ trong khoa, nghiệm thu và báo cáo lên.
 - **Cán bộ** — xem việc được giao, cập nhật tiến độ, tải tài liệu và bình luận.
 
-Công việc **2 tầng** (*phiếu giao việc* → *sub-task*), nghiệm thu **2 bước** (cán bộ báo
-*Chờ duyệt* → trưởng khoa xác nhận *Hoàn thành*), quá hạn tự gắn 🔴.
+## Cấu trúc công việc (2 tầng)
+
+1. **Phiếu giao việc** — Ban Giám đốc/Thư ký tạo và giao cho một hoặc nhiều trưởng khoa.
+2. **Sub-task** — trưởng khoa chia nhỏ phiếu, giao cho **1 cán bộ chính + nhiều người phối hợp**.
+
+Vòng đời: `MỚI → ĐANG LÀM → CHỜ DUYỆT → HOÀN THÀNH` (kèm % tiến độ) · quá hạn tự gắn 🔴 ·
+nghiệm thu **2 bước** (cán bộ báo *Chờ duyệt* → trưởng khoa xác nhận *Hoàn thành*).
 
 ## Lộ trình
 
-Đăng nhập & phân quyền ✅ · Công việc 🔜 · Báo cáo · Ghi âm – Biên bản · Thông báo
+- [x] **B0–B1** — Đăng nhập, phân quyền, quản trị; vai trò theo phạm vi (Admin / Ban Giám đốc / Thư ký / Trưởng khoa / Cán bộ)
+- [ ] **B2** — Công việc: phiếu giao việc → sub-task, nghiệm thu 2 bước, cảnh báo quá hạn
+- [ ] **B3** — Báo cáo: toàn viện / khoa, xếp hạng cán bộ, xu hướng
+- [ ] **B4** — Ghi âm – Biên bản
+- [ ] **B5** — Thông báo (trong app + email)
