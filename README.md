@@ -39,10 +39,16 @@ Tiến độ cán bộ/khoa/phiếu lần lượt là trung bình việc của c
 Ban Giám đốc bấm vào từng khoa để xem **ai chưa xong và còn thiếu việc gì**. Khi mọi việc đã
 nghiệm thu (hoặc khoa đã đóng), phiếu **tự chuyển Hoàn thành**.
 
+## Báo cáo
+
+Trang **Báo cáo** tổng hợp tiến độ theo khoa/phòng, **xếp hạng cán bộ**, liệt kê **việc quá hạn**
+và cho **xuất CSV**; lọc theo khoảng ngày và khoa/phòng. Ban Giám đốc xem toàn viện, trưởng khoa
+chỉ xem khoa mình, quản trị viên chỉ xem số liệu tổng hợp (không có nội dung công việc).
+
 ## Lộ trình
 
 - [x] **B0–B1** — Đăng nhập, phân quyền, quản trị; vai trò theo phạm vi (Admin / Ban Giám đốc / Thư ký / Trưởng khoa / Cán bộ)
 - [x] **B2** — Công việc: phiếu giao việc → sub-task, nghiệm thu 2 bước, tiến độ tự động theo trạng thái, đóng/mở khoa, bình luận, tệp đính kèm, người theo dõi, cảnh báo quá hạn
-- [ ] **B3** — Báo cáo: toàn viện / khoa, xếp hạng cán bộ, xu hướng
+- [x] **B3** — Báo cáo: toàn viện / khoa, xếp hạng cán bộ, việc quá hạn, xuất CSV
 - [ ] **B4** — Ghi âm – Biên bản
 - [ ] **B5** — Thông báo (trong app + email)

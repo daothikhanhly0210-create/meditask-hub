@@ -89,18 +89,33 @@ export function can(role: string | undefined | null, permission: Permission): bo
   return PERMISSION_MATRIX[role].includes(permission);
 }
 
+/** True when the role holds at least one of the given permissions. */
+export function canAny(
+  role: string | undefined | null,
+  permissions: readonly Permission[],
+): boolean {
+  if (!isRole(role)) return false;
+  const granted = PERMISSION_MATRIX[role];
+  return permissions.some((permission) => granted.includes(permission));
+}
+
 export function permissionsFor(role: Role): readonly Permission[] {
   return PERMISSION_MATRIX[role];
 }
 
 /**
- * Map an application path to the permission required to view it.
- * Returns null when the path only requires authentication.
+ * Map an application path to the permissions that grant access to it.
+ * Returns an empty array when the path only requires authentication, and more
+ * than one entry when any of several permissions is enough (e.g. the reports
+ * page is shared by the board, department heads and the administrator).
  */
-export function requiredPermissionForPath(pathname: string): Permission | null {
-  if (pathname.startsWith("/admin/users")) return "user:manage";
-  if (pathname.startsWith("/admin/departments")) return "department:manage";
-  if (pathname.startsWith("/admin")) return "settings:manage";
-  if (pathname.startsWith("/tasks")) return "task:view";
-  return null;
+export function requiredPermissionsForPath(pathname: string): readonly Permission[] {
+  if (pathname.startsWith("/admin/users")) return ["user:manage"];
+  if (pathname.startsWith("/admin/departments")) return ["department:manage"];
+  if (pathname.startsWith("/admin")) return ["settings:manage"];
+  if (pathname.startsWith("/tasks")) return ["task:view"];
+  if (pathname.startsWith("/reports")) {
+    return ["report:company", "report:department", "report:overview"];
+  }
+  return [];
 }

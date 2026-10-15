@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   Building2,
   ClipboardList,
   LayoutDashboard,
@@ -13,7 +14,8 @@ export type NavItem = {
   key: string;
   href: string;
   icon: LucideIcon;
-  permission?: Permission;
+  /** A single permission, or any one of several. */
+  permission?: Permission | readonly Permission[];
 };
 
 export type NavGroup = {
@@ -31,6 +33,12 @@ export const navGroups: NavGroup[] = [
     items: [
       { key: "nav.workOrders", href: "/tasks", icon: ClipboardList, permission: "task:view" },
       { key: "nav.myWork", href: "/tasks/my", icon: ListChecks, permission: "task:view" },
+      {
+        key: "nav.reports",
+        href: "/reports",
+        icon: BarChart3,
+        permission: ["report:company", "report:department", "report:overview"],
+      },
     ],
   },
   {

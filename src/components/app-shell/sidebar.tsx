@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navGroups } from "./nav-config";
 import { useTranslations } from "@/components/i18n-provider";
-import { asRole, can } from "@/lib/rbac";
+import { asRole, canAny, type Permission } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
 
 export function Sidebar({ role }: { role: string }) {
@@ -23,9 +23,13 @@ export function Sidebar({ role }: { role: string }) {
 
       <nav className="flex-1 space-y-6 overflow-y-auto p-4">
         {navGroups.map((group) => {
-          const items = group.items.filter(
-            (item) => !item.permission || can(roleValue, item.permission),
-          );
+          const items = group.items.filter((item) => {
+            if (!item.permission) return true;
+            const required = Array.isArray(item.permission)
+              ? item.permission
+              : [item.permission as Permission];
+            return canAny(roleValue, required);
+          });
           if (items.length === 0) return null;
 
           return (

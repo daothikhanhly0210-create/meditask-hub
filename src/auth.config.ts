@@ -1,5 +1,5 @@
 import type { NextAuthConfig } from "next-auth";
-import { can, requiredPermissionForPath } from "@/lib/rbac";
+import { canAny, requiredPermissionsForPath } from "@/lib/rbac";
 
 /**
  * Edge-safe NextAuth configuration. This file must NOT import Prisma or any
@@ -48,8 +48,8 @@ export const authConfig = {
         return false;
       }
 
-      const required = requiredPermissionForPath(pathname);
-      if (required && !can(auth?.user?.role, required)) {
+      const required = requiredPermissionsForPath(pathname);
+      if (required.length > 0 && !canAny(auth?.user?.role, required)) {
         return Response.redirect(new URL("/dashboard", request.nextUrl));
       }
 
