@@ -1,4 +1,4 @@
-// Internal HR & Task Management — Phase 1 data model.
+// Medical Task Management — data model.
 // PostgreSQL is used for both development and production. `role` is stored as
 // a String (rather than a Prisma enum) and validated in application code
 // (see src/lib/rbac.ts), which keeps the schema portable and easy to evolve.
@@ -37,7 +37,7 @@ model User {
   email              String  @unique
   name               String
   passwordHash       String
-  role               String  @default("EMPLOYEE")
+  role               String  @default("STAFF")
   isActive           Boolean @default(true)
   mustChangePassword Boolean @default(true)
   phone              String?

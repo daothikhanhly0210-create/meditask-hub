@@ -6,17 +6,17 @@ const prisma = new PrismaClient();
 const DEMO_PASSWORD = "Demo@12345";
 
 const departments = [
-  { code: "HR", name: "Nhân sự", nameEn: "Human Resources", description: "Tuyển dụng và quản lý nhân sự" },
-  { code: "ACC", name: "Kế toán", nameEn: "Accounting", description: "Tài chính và kế toán" },
-  { code: "SALES", name: "Kinh doanh", nameEn: "Sales", description: "Bán hàng và chăm sóc khách hàng" },
-  { code: "ENG", name: "Kỹ thuật", nameEn: "Engineering", description: "Phát triển sản phẩm và hạ tầng" },
-  { code: "MKT", name: "Marketing", nameEn: "Marketing", description: "Truyền thông và thương hiệu" },
+  { code: "KKB", name: "Khoa Khám bệnh", nameEn: "Outpatient Department", description: "Khám bệnh và điều trị ngoại trú" },
+  { code: "KHTH", name: "Phòng Kế hoạch tổng hợp", nameEn: "Planning & General Affairs", description: "Kế hoạch, tổng hợp và điều phối" },
+  { code: "TCCB", name: "Phòng Tổ chức cán bộ", nameEn: "Personnel & Organization", description: "Tổ chức, cán bộ và nhân sự" },
+  { code: "DUOC", name: "Khoa Dược", nameEn: "Pharmacy Department", description: "Quản lý dược và cấp phát thuốc" },
+  { code: "XN", name: "Khoa Xét nghiệm", nameEn: "Laboratory Department", description: "Xét nghiệm và chẩn đoán" },
 ];
 
 type SeedUser = {
   email: string;
   name: string;
-  role: "ADMIN" | "BOSS" | "SECRETARY" | "DEPT_HEAD" | "EMPLOYEE";
+  role: "ADMIN" | "DIRECTOR" | "SECRETARY" | "DEPT_HEAD" | "STAFF";
   departmentCode: string | null;
   jobTitle: string;
   phone?: string;
@@ -24,27 +24,30 @@ type SeedUser = {
 
 const users: SeedUser[] = [
   { email: "admin@admin.company.local", name: "Quản trị viên", role: "ADMIN", departmentCode: null, jobTitle: "Quản trị hệ thống" },
-  { email: "boss@boss.company.local", name: "Giám đốc", role: "BOSS", departmentCode: null, jobTitle: "Giám đốc điều hành" },
+  { email: "director@director.company.local", name: "Giám đốc", role: "DIRECTOR", departmentCode: null, jobTitle: "Giám đốc bệnh viện" },
   { email: "secretary@secretary.company.local", name: "Thư ký", role: "SECRETARY", departmentCode: null, jobTitle: "Thư ký ban giám đốc" },
-  { email: "head@head.company.local", name: "Trưởng phòng Kỹ thuật", role: "DEPT_HEAD", departmentCode: "ENG", jobTitle: "Trưởng phòng Kỹ thuật" },
-  { email: "employee@employee.company.local", name: "Nhân viên Kỹ thuật", role: "EMPLOYEE", departmentCode: "ENG", jobTitle: "Lập trình viên" },
+  { email: "head@head.company.local", name: "Trưởng khoa Khám bệnh", role: "DEPT_HEAD", departmentCode: "KKB", jobTitle: "Trưởng khoa Khám bệnh" },
+  { email: "staff@staff.company.local", name: "Nhân viên Khoa Khám bệnh", role: "STAFF", departmentCode: "KKB", jobTitle: "Điều dưỡng" },
 ];
 
 /**
- * Older seeds used a single `@company.local` domain for every role. Rename any
- * such accounts to the new per-role domains so re-seeding does not leave
- * duplicate demo users behind.
+ * Older seeds used a single `@company.local` domain for every role, and an
+ * earlier revision named the roles BOSS/EMPLOYEE. Rename any such accounts to
+ * the current emails/roles so re-seeding does not leave duplicate demo users
+ * behind.
  */
 const legacyEmailAliases: Record<string, string> = {
   "admin@company.local": "admin@admin.company.local",
-  "boss@company.local": "boss@boss.company.local",
+  "boss@company.local": "director@director.company.local",
+  "boss@boss.company.local": "director@director.company.local",
   "secretary@company.local": "secretary@secretary.company.local",
   "head@company.local": "head@head.company.local",
-  "employee@company.local": "employee@employee.company.local",
+  "employee@company.local": "staff@staff.company.local",
+  "employee@employee.company.local": "staff@staff.company.local",
 };
 
 const settings = [
-  { key: "company.name", value: "Công ty Nội bộ" },
+  { key: "company.name", value: "Bệnh viện Đa khoa" },
   { key: "deadline.warningDays", value: "2" },
   { key: "meeting.language", value: "vi" },
 ];
@@ -78,6 +81,18 @@ async function main() {
     }
   }
 
+  // An earlier revision named the roles BOSS/EMPLOYEE. Migrate any remaining
+  // rows (created through the admin UI) to the new DIRECTOR/STAFF names.
+  console.log("Migrating legacy role names...");
+  const legacyRoleRenames: Array<[string, string]> = [
+    ["BOSS", "DIRECTOR"],
+    ["EMPLOYEE", "STAFF"],
+  ];
+  for (const [from, to] of legacyRoleRenames) {
+    const { count } = await prisma.user.updateMany({ where: { role: from }, data: { role: to } });
+    if (count > 0) console.log(`  Renamed ${count} user(s) with role ${from} -> ${to}`);
+  }
+
   for (const user of users) {
     const departmentId = user.departmentCode ? departmentIdByCode.get(user.departmentCode) ?? null : null;
     await prisma.user.upsert({
@@ -104,11 +119,21 @@ async function main() {
     });
   }
 
+  // This seed used to create a company-style department set (HR/ACC/SALES/ENG/
+  // MKT). Retire those demo rows now that the sample data is hospital-style so
+  // re-seeding does not leave a stale set behind. Custom departments are kept.
+  console.log("Retiring legacy demo departments...");
+  const legacyDepartmentCodes = ["HR", "ACC", "SALES", "ENG", "MKT"];
+  const retired = await prisma.department.deleteMany({
+    where: { code: { in: legacyDepartmentCodes }, users: { none: {} } },
+  });
+  if (retired.count > 0) console.log(`  Removed ${retired.count} legacy department(s)`);
+
   console.log("Assigning department head...");
   const head = await prisma.user.findUnique({ where: { email: "head@head.company.local" } });
-  const engineering = departmentIdByCode.get("ENG");
-  if (head && engineering) {
-    await prisma.department.update({ where: { id: engineering }, data: { headId: head.id } });
+  const outpatient = departmentIdByCode.get("KKB");
+  if (head && outpatient) {
+    await prisma.department.update({ where: { id: outpatient }, data: { headId: head.id } });
   }
 
   console.log("Seeding settings...");

@@ -12,7 +12,7 @@ const optionalText = (max: number) =>
       return trimmed.length > 0 ? trimmed : null;
     });
 
-export const roleSchema = z.enum(["ADMIN", "BOSS", "SECRETARY", "DEPT_HEAD", "EMPLOYEE"]);
+export const roleSchema = z.enum(["ADMIN", "DIRECTOR", "SECRETARY", "DEPT_HEAD", "STAFF"]);
 
 export const createUserSchema = z.object({
   name: z.string().trim().min(2, "validation.nameTooShort").max(120, "validation.nameTooLong"),

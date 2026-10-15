@@ -18,16 +18,8 @@ export type DemoAccount = {
  */
 export const demoAccounts: DemoAccount[] = [
   { role: "ADMIN", name: "Quản trị viên", email: "admin@admin.company.local" },
-  { role: "BOSS", name: "Giám đốc", email: "boss@boss.company.local" },
+  { role: "DIRECTOR", name: "Giám đốc", email: "director@director.company.local" },
   { role: "SECRETARY", name: "Thư ký", email: "secretary@secretary.company.local" },
-  { role: "DEPT_HEAD", name: "Trưởng phòng Kỹ thuật", email: "head@head.company.local" },
-  { role: "EMPLOYEE", name: "Nhân viên Kỹ thuật", email: "employee@employee.company.local" },
-];
-
-export const seedDepartments = [
-  { name: "Nhân sự", nameEn: "Human Resources", code: "HR", description: "Tuyển dụng và quản lý nhân sự" },
-  { name: "Kế toán", nameEn: "Accounting", code: "ACC", description: "Tài chính và kế toán" },
-  { name: "Kinh doanh", nameEn: "Sales", code: "SALES", description: "Bán hàng và chăm sóc khách hàng" },
-  { name: "Kỹ thuật", nameEn: "Engineering", code: "ENG", description: "Phát triển sản phẩm và hạ tầng" },
-  { name: "Marketing", nameEn: "Marketing", code: "MKT", description: "Truyền thông và thương hiệu" },
+  { role: "DEPT_HEAD", name: "Trưởng khoa Khám bệnh", email: "head@head.company.local" },
+  { role: "STAFF", name: "Nhân viên Khoa Khám bệnh", email: "staff@staff.company.local" },
 ];

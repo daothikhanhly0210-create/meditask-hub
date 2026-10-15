@@ -32,7 +32,7 @@ export type MailMessage = {
 };
 
 export async function sendMail(message: MailMessage): Promise<boolean> {
-  const from = process.env.SMTP_FROM ?? "HRMS <no-reply@company.local>";
+  const from = process.env.SMTP_FROM ?? "Hệ thống Giao việc Y tế <no-reply@company.local>";
   const transporter = getTransporter();
 
   if (!transporter) {

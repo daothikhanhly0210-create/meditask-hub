@@ -94,7 +94,7 @@ export function UserDialog({ open, onClose, departments, user }: Props) {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t("fields.role")} htmlFor="role" required error={fieldError("role")}>
-            <Select id="role" name="role" defaultValue={user?.role ?? "EMPLOYEE"}>
+            <Select id="role" name="role" defaultValue={user?.role ?? "STAFF"}>
               {ROLES.map((role) => (
                 <option key={role} value={role}>
                   {t(`roles.${role}`)}

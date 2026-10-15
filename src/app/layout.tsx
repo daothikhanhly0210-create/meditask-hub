@@ -6,9 +6,9 @@ import { I18nProvider } from "@/components/i18n-provider";
 import { getLocale } from "@/i18n";
 
 export const metadata: Metadata = {
-  title: "HRMS Nội bộ | Internal HR & Task Management",
+  title: "Hệ thống Giao việc Y tế | Medical Task Management",
   description:
-    "Hệ thống quản lý nhân sự, ghi âm cuộc họp, biên bản và phân công công việc nội bộ.",
+    "Hệ thống giao việc nội bộ: ghi âm cuộc họp, biên bản, phân công và theo dõi tiến độ công việc theo khoa/phòng.",
   icons: {
     icon: "/favicon.ico",
   },

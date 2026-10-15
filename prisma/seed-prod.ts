@@ -21,15 +21,15 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 const departments = [
-  { code: "HR", name: "Nhân sự", nameEn: "Human Resources", description: "Tuyển dụng và quản lý nhân sự" },
-  { code: "ACC", name: "Kế toán", nameEn: "Accounting", description: "Tài chính và kế toán" },
-  { code: "SALES", name: "Kinh doanh", nameEn: "Sales", description: "Bán hàng và chăm sóc khách hàng" },
-  { code: "ENG", name: "Kỹ thuật", nameEn: "Engineering", description: "Phát triển sản phẩm và hạ tầng" },
-  { code: "MKT", name: "Marketing", nameEn: "Marketing", description: "Truyền thông và thương hiệu" },
+  { code: "KKB", name: "Khoa Khám bệnh", nameEn: "Outpatient Department", description: "Khám bệnh và điều trị ngoại trú" },
+  { code: "KHTH", name: "Phòng Kế hoạch tổng hợp", nameEn: "Planning & General Affairs", description: "Kế hoạch, tổng hợp và điều phối" },
+  { code: "TCCB", name: "Phòng Tổ chức cán bộ", nameEn: "Personnel & Organization", description: "Tổ chức, cán bộ và nhân sự" },
+  { code: "DUOC", name: "Khoa Dược", nameEn: "Pharmacy Department", description: "Quản lý dược và cấp phát thuốc" },
+  { code: "XN", name: "Khoa Xét nghiệm", nameEn: "Laboratory Department", description: "Xét nghiệm và chẩn đoán" },
 ];
 
 const settings = [
-  { key: "company.name", value: "Công ty Nội bộ" },
+  { key: "company.name", value: "Bệnh viện Đa khoa" },
   { key: "deadline.warningDays", value: "2" },
   { key: "meeting.language", value: "vi" },
 ];

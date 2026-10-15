@@ -2,8 +2,8 @@ import type vi from "./vi";
 
 const en: typeof vi = {
   common: {
-    appName: "Internal HRMS",
-    appShort: "HRMS",
+    appName: "Medical Task Management System",
+    appShort: "Med Tasks",
     save: "Save",
     cancel: "Cancel",
     create: "Create",
@@ -30,7 +30,7 @@ const en: typeof vi = {
   },
   auth: {
     title: "Sign in",
-    subtitle: "Internal HR & task management",
+    subtitle: "Assign tasks, track progress & meeting minutes",
     email: "Email",
     password: "Password",
     signIn: "Sign in",
@@ -44,10 +44,10 @@ const en: typeof vi = {
   },
   roles: {
     ADMIN: "Administrator",
-    BOSS: "Boss",
+    DIRECTOR: "Board of Directors",
     SECRETARY: "Secretary",
     DEPT_HEAD: "Department Head",
-    EMPLOYEE: "Employee",
+    STAFF: "Staff",
   },
   nav: {
     dashboard: "Dashboard",
@@ -131,7 +131,7 @@ const en: typeof vi = {
     allRoles: "All roles",
     allDepartments: "All departments",
     noDepartment: "No department",
-    codeHint: "e.g. HR",
+    codeHint: "e.g. KKB",
     noDepartmentsYet: "No departments yet. Please create a department first.",
     assignToDepartment: "Department",
     noHead: "Not assigned",

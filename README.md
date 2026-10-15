@@ -1,10 +1,10 @@
-# HRMS Nội bộ — Internal HR & Task Management
+# Hệ thống Giao việc Y tế — Medical Task Management
 
-Quản lý nhân sự & công việc nội bộ: ghi âm cuộc họp → biên bản, giao việc theo phòng
-ban, theo dõi tiến độ. Giao diện tiếng Việt (mặc định) + tiếng Anh.
+Giao việc nội bộ cho bệnh viện: ghi âm cuộc họp → biên bản, giao việc theo khoa/phòng,
+theo dõi tiến độ. Giao diện tiếng Việt (mặc định) + tiếng Anh.
 
-> **Trạng thái:** Phase 1 đã xong (đăng nhập, phân quyền, quản trị người dùng & phòng
-> ban). Các module Công việc / Báo cáo / Ghi âm – Biên bản đang triển khai (xem *Lộ trình*).
+> **Trạng thái:** Phase 1 đã xong (đăng nhập, phân quyền, quản trị người dùng & khoa/
+> phòng). Các module Công việc / Báo cáo / Ghi âm – Biên bản đang triển khai (xem *Lộ trình*).
 
 **Công nghệ:** Next.js 16 (App Router) · TypeScript · Tailwind 4 · Prisma 6 + PostgreSQL
 (Neon) · Auth.js v5 · Webpack.
@@ -28,38 +28,48 @@ Mật khẩu chung: **`Demo@12345`** — mỗi vai trò một đuôi email riên
 
 | Vai trò | Email |
 |---|---|
-| Admin | `admin@admin.company.local` |
-| Giám đốc | `boss@boss.company.local` |
+| Quản trị viên | `admin@admin.company.local` |
+| Ban Giám đốc | `director@director.company.local` |
 | Thư ký | `secretary@secretary.company.local` |
-| Trưởng phòng | `head@head.company.local` |
-| Nhân viên | `employee@employee.company.local` |
+| Trưởng khoa/phòng | `head@head.company.local` |
+| Cán bộ | `staff@staff.company.local` |
+
+Dữ liệu mẫu gồm 5 khoa/phòng (Admin sửa được): Khoa Khám bệnh, Phòng Kế hoạch tổng
+hợp, Phòng Tổ chức cán bộ, Khoa Dược, Khoa Xét nghiệm.
 
 ## Phân quyền (thiết kế đã chốt)
 
-| Chức năng | Admin | Giám đốc | Thư ký | Trưởng phòng | Nhân viên |
+| Chức năng | Admin | Ban GĐ | Thư ký | Trưởng khoa/phòng | Cán bộ |
 |---|:-:|:-:|:-:|:-:|:-:|
-| Quản lý tài khoản & phòng ban | ✅ | – | – | – | – |
-| Báo cáo toàn công ty | ✅ | ✅ | ✅ | – | – |
-| Báo cáo phòng mình | – | – | – | ✅ | – |
-| Giao việc (phạm vi) | – | toàn hệ thống | toàn hệ thống | trong phòng | – |
-| Nhận việc, cập nhật % + trạng thái | – | ✅ | ✅ | ✅ | ✅ |
-| Duyệt hoàn thành (việc mình giao) | – | ✅ | ✅ | ✅ | – |
-| Tải lên / ban hành ghi âm – biên bản | – | – | ✅ | – | – |
+| Quản lý tài khoản & khoa/phòng | ✅ | – | – | – | – |
+| Xem báo cáo **chi tiết** toàn viện | 🚫 | ✅ | ✅ | – | – |
+| Xem báo cáo chi tiết khoa/phòng mình | – | – | – | ✅ | – |
+| Tạo **Phiếu giao việc**, giao cho trưởng khoa | – | ✅ | ✅ | – | – |
+| Chia nhỏ thành **sub-task** trong khoa mình | – | – | – | ✅ | – |
+| Thêm người theo dõi (Follower) | – | ✅ | – | – | – |
+| Nhận việc & cập nhật tiến độ | – | – | – | ✅ | ✅ |
+| Nghiệm thu việc của cán bộ (2 bước) | – | – | – | ✅ | – |
+| Ghi âm / ban hành biên bản | – | – | ✅ | – | – |
+| Chỉ xem việc được giao/phối hợp | – | – | – | – | ✅ |
 
-Quy tắc: 1 công việc = 1 người nhận · `MỚI → ĐANG LÀM → CHỜ DUYỆT → HOÀN THÀNH`
-(+ `CẦN LÀM LẠI`) · quá hạn tự gắn 🔴 · mọi thay đổi lưu nhật ký.
+Cấu trúc công việc **2 tầng**: *Phiếu giao việc* (Ban Giám đốc → nhiều trưởng khoa) →
+*sub-task* (trưởng khoa → cán bộ). Một sub-task có **1 người chính + nhiều người phối
+hợp**. Nghiệm thu **2 bước**: cán bộ báo *Chờ duyệt* → trưởng khoa nghiệm thu *Hoàn
+thành*. Trạng thái `ĐANG LÀM → CHỜ DUYỆT → HOÀN THÀNH` · quá hạn tự gắn 🔴 · mọi thay
+đổi lưu nhật ký.
 
-> Hiện mới áp dụng: quản lý người dùng & phòng ban (Admin), bảng điều khiển, hồ sơ cá
-> nhân. Phần còn lại thuộc B1–B5 dưới đây.
+> Hiện mới áp dụng: quản lý người dùng & khoa/phòng (Admin), bảng điều khiển, hồ sơ cá
+> nhân. Ma trận quyền ở trên đã có trong mã nguồn (`src/lib/rbac.ts`); các trang Công
+> việc / Báo cáo / Biên bản thuộc B1–B5 dưới đây.
 
 ## Lộ trình
 
 | | Nội dung |
 |---|---|
 | ✅ **Phase 1** | Đăng nhập, phân quyền, quản trị |
-| 🔜 **B1** | Phân quyền theo vai trò + phạm vi, menu theo vai trò |
-| ⏳ **B2** | Công việc: giao việc, duyệt 2 bước, cảnh báo quá hạn |
-| ⏳ **B3** | Báo cáo: toàn công ty / phòng |
+| ✅ **B1** | Vai trò & ma trận quyền theo phạm vi (Admin / Ban GĐ / Thư ký / Trưởng khoa / Cán bộ) |
+| 🔜 **B2** | Công việc: phiếu giao việc, sub-task, nghiệm thu 2 bước, cảnh báo quá hạn |
+| ⏳ **B3** | Báo cáo: toàn viện / khoa, xếp hạng cán bộ, xu hướng tuần–tháng |
 | ⏳ **B4** | Ghi âm – Biên bản |
 | ⏳ **B5** | Thông báo (trong app + email) |
 
@@ -84,8 +94,8 @@ Quy tắc: 1 công việc = 1 người nhận · `MỚI → ĐANG LÀM → CHỜ
 4. Nạp admin **một lần** (chạy cục bộ, trỏ vào CSDL prod):
    `$env:ADMIN_EMAIL="..."; $env:ADMIN_PASSWORD="..."; npm run db:seed:prod`
 
-> Gói Vercel **Hobby** chỉ dành cho mục đích cá nhân/phi thương mại — dùng nội bộ công
-> ty nên cân nhắc gói Pro hoặc tự host VPS.
+> Gói Vercel **Hobby** chỉ dành cho mục đích cá nhân/phi thương mại — dùng nội bộ bệnh
+> viện nên cân nhắc gói Pro hoặc tự host VPS.
 
 ## Ghi chú
 
