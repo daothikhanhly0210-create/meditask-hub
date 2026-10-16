@@ -1,7 +1,7 @@
 const vi = {
   common: {
-    appName: "Hệ thống Giao việc Y tế",
-    appShort: "Giao việc Y tế",
+    appName: "MediTask Hub",
+    appShort: "MTH",
     save: "Lưu",
     cancel: "Hủy",
     create: "Tạo mới",

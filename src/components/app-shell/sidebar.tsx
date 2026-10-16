@@ -15,8 +15,8 @@ export function Sidebar({ role }: { role: string }) {
   return (
     <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-card lg:flex">
       <div className="flex h-16 items-center gap-2.5 border-b border-border px-6">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-          HR
+        <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-[10px] font-bold tracking-tight text-primary-foreground">
+          MTH
         </div>
         <span className="truncate text-sm font-semibold">{t("common.appName")}</span>
       </div>

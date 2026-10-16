@@ -6,9 +6,9 @@ import { I18nProvider } from "@/components/i18n-provider";
 import { getLocale } from "@/i18n";
 
 export const metadata: Metadata = {
-  title: "Hệ thống Giao việc Y tế | Medical Task Management",
+  title: "MediTask Hub | Giao việc & Biên bản bệnh viện",
   description:
-    "Hệ thống giao việc nội bộ: ghi âm cuộc họp, biên bản, phân công và theo dõi tiến độ công việc theo khoa/phòng.",
+    "MediTask Hub (MTH) — hệ thống giao việc nội bộ cho bệnh viện: phiếu giao việc theo khoa/phòng, theo dõi tiến độ, biên bản cuộc họp và đầu việc.",
   icons: {
     icon: "/favicon.ico",
   },

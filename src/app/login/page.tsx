@@ -16,8 +16,8 @@ export default async function LoginPage() {
     <main className="flex min-h-dvh items-center justify-center bg-muted/40 p-4">
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <div className="flex size-12 items-center justify-center rounded-xl bg-primary text-lg font-bold text-primary-foreground">
-            HR
+          <div className="flex size-12 items-center justify-center rounded-xl bg-primary text-sm font-bold tracking-tight text-primary-foreground">
+            MTH
           </div>
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight">{t("auth.title")}</h1>

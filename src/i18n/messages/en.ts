@@ -2,8 +2,8 @@ import type vi from "./vi";
 
 const en: typeof vi = {
   common: {
-    appName: "Medical Task Management System",
-    appShort: "Med Tasks",
+    appName: "MediTask Hub",
+    appShort: "MTH",
     save: "Save",
     cancel: "Cancel",
     create: "Create",

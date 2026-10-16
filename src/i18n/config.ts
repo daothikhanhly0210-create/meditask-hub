@@ -4,7 +4,7 @@ export type Locale = (typeof locales)[number];
 
 export const defaultLocale: Locale = "vi";
 
-export const LOCALE_COOKIE = "hrms_locale";
+export const LOCALE_COOKIE = "mth_locale";
 
 export const localeNames: Record<Locale, string> = {
   vi: "Tiếng Việt",

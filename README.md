@@ -1,7 +1,7 @@
-# Hệ thống Giao việc Y tế
+# MediTask Hub
 
-Ứng dụng nội bộ cho bệnh viện: ghi âm cuộc họp, tạo biên bản, giao việc theo khoa/phòng
-và theo dõi tiến độ. Giao diện tiếng Việt (mặc định) + tiếng Anh.
+**MediTask Hub (MTH)** — ứng dụng nội bộ cho bệnh viện: ghi âm cuộc họp, tạo biên bản, giao việc theo
+khoa/phòng và theo dõi tiến độ. Hỗ trợ tiếng Việt (mặc định) và tiếng Anh. Giao diện tiếng Việt (mặc định) + tiếng Anh.
 
 **Công nghệ:** Next.js 16 · TypeScript · Tailwind 4 · Prisma 6 + PostgreSQL (Neon) · Auth.js v5
 

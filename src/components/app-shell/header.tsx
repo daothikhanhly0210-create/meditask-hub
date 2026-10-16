@@ -25,8 +25,8 @@ export function Header({
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 backdrop-blur lg:px-8">
       <div className="flex min-w-0 items-center gap-3 lg:hidden">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
-          HR
+        <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-[10px] font-bold tracking-tight text-primary-foreground">
+          MTH
         </div>
         <span className="truncate text-sm font-semibold">{t("common.appShort")}</span>
       </div>
