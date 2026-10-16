@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description:
     "MediTask Hub (MTH) — hệ thống giao việc nội bộ cho bệnh viện: phiếu giao việc theo khoa/phòng, theo dõi tiến độ, biên bản cuộc họp và đầu việc.",
   icons: {
-    icon: "/favicon.ico",
+    icon: [{ url: "/icon.svg", type: "image/svg+xml", sizes: "any" }],
   },
 };
 
