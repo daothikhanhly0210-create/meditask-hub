@@ -91,6 +91,8 @@ export default async function MeetingDetailPage({
     assigneeName: item.assignee?.name ?? null,
     workOrderId: item.workOrder?.id ?? null,
     workOrderCode: item.workOrder?.code ?? null,
+    converted: Boolean(item.workOrderId),
+    canConvert: can(user.role, "task:assign:company"),
     overdue: isOverdue(item.dueDate, Boolean(item.workOrderId)),
   }));
 

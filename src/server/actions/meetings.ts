@@ -14,6 +14,7 @@ import {
 import { errorState, successState, type ActionState } from "@/lib/action-state";
 import { nextMeetingCode, nextWorkOrderCode } from "@/server/codes";
 import { loadMeetingDocument } from "@/server/meeting-document";
+import { meetingScope } from "@/lib/meetings";
 import { minuteFileName } from "@/lib/export/minute-document";
 import { buildMinuteDocx } from "@/lib/export/docx";
 import { buildMinutePdf } from "@/lib/export/pdf";
@@ -52,6 +53,7 @@ function isUniqueViolation(error: unknown): boolean {
 
 function revalidateMeeting(meetingId?: string) {
   revalidatePath("/meetings");
+  revalidatePath("/meetings/actions");
   if (meetingId) revalidatePath(`/meetings/${meetingId}`);
 }
 
@@ -452,8 +454,11 @@ export async function convertActionItemAction(
   const actionItemId = readText(formData, "actionItemId");
   if (!actionItemId) return errorState("messages.invalidData");
 
-  const item = await prisma.minuteActionItem.findUnique({
-    where: { id: actionItemId },
+  const item = await prisma.minuteActionItem.findFirst({
+    where: {
+      id: actionItemId,
+      meeting: meetingScope(actor),
+    },
     select: {
       id: true,
       meetingId: true,
@@ -480,6 +485,11 @@ export async function convertActionItemAction(
     for (let attempt = 0; attempt < 5 && !created; attempt += 1) {
       try {
         created = await prisma.$transaction(async (tx) => {
+          const locked = (await tx.$queryRaw<Array<{ workOrderId: string | null }>>`
+            SELECT "workOrderId" FROM "minute_action_items" WHERE id = ${item.id} FOR UPDATE
+          `);
+          if (locked.length === 0 || locked[0].workOrderId) return null;
+
           const code = await nextWorkOrderCode(tx);
           const workOrder = await tx.workOrder.create({
             data: {
@@ -510,7 +520,19 @@ export async function convertActionItemAction(
       }
     }
 
-    if (!created) return errorState("messages.actionFailed");
+    if (!created) {
+      // Nếu đã được chuyển trong lúc retry, trả về thông báo đã chuyển
+      const check = await prisma.minuteActionItem.findUnique({
+        where: { id: item.id },
+        select: { workOrderId: true },
+      });
+      if (check?.workOrderId) {
+        revalidateMeeting(item.meetingId);
+        revalidatePath("/tasks");
+        return errorState("messages.actionItemAlreadyConverted");
+      }
+      return errorState("messages.actionFailed");
+    }
 
     await recordAudit({
       actorId: actor.id,

@@ -1,11 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { useTranslations } from "@/components/i18n-provider";
 import { cn, formatDate } from "@/lib/utils";
+import { Search } from "lucide-react";
 import type { MySubTaskItem } from "../types";
 
 const STATUS_VARIANT: Record<
@@ -72,26 +75,92 @@ function Row({ item, locale }: { item: MySubTaskItem; locale: string }) {
 export function MyWorkClient({ items, locale }: { items: MySubTaskItem[]; locale: string }) {
   const t = useTranslations();
   const [showCompleted, setShowCompleted] = useState(false);
+  const [search, setSearch] = useState("");
+  const [department, setDepartment] = useState("ALL");
+  const [assignee, setAssignee] = useState("ALL");
+  const [status, setStatus] = useState("ALL");
+
+  const departments = useMemo(() => {
+    const set = new Set<string>();
+    for (const it of items) if (it.departmentName) set.add(it.departmentName);
+    return Array.from(set).sort();
+  }, [items]);
+
+  const assignees = useMemo(() => {
+    const set = new Set<string>();
+    for (const it of items) if (it.mainAssigneeName) set.add(it.mainAssigneeName);
+    return Array.from(set).sort();
+  }, [items]);
+
+  const filterItem = useCallback(
+    (item: MySubTaskItem, includeCompleted: boolean): boolean => {
+      if (!includeCompleted && item.status === "DONE") return false;
+      if (status !== "ALL" && item.status !== status) return false;
+      if (department !== "ALL" && item.departmentName !== department) return false;
+      if (assignee !== "ALL" && item.mainAssigneeName !== assignee) return false;
+      if (!search.trim()) return true;
+      const q = search.trim().toLowerCase();
+      return (
+        item.title.toLowerCase().includes(q) ||
+        item.workOrderTitle.toLowerCase().includes(q) ||
+        item.workOrderCode.toLowerCase().includes(q) ||
+        (item.departmentName?.toLowerCase().includes(q) ?? false) ||
+        (item.mainAssigneeName?.toLowerCase().includes(q) ?? false)
+      );
+    },
+    [status, department, assignee, search],
+  );
 
   const { review, mine } = useMemo(() => {
     const reviewItems: MySubTaskItem[] = [];
     const myItems: MySubTaskItem[] = [];
     for (const item of items) {
       if (item.canApprove && item.status === "PENDING_REVIEW") {
-        reviewItems.push(item);
+        if (filterItem(item, true)) reviewItems.push(item);
         continue;
       }
       if (!showCompleted && item.status === "DONE") continue;
-      myItems.push(item);
+      if (filterItem(item, showCompleted)) myItems.push(item);
     }
     return { review: reviewItems, mine: myItems };
-  }, [items, showCompleted]);
+  }, [items, showCompleted, filterItem]);
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-8">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">{t("tasks.myTitle")}</h1>
         <p className="text-sm text-muted-foreground">{t("tasks.mySubtitle")}</p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative w-full max-w-xs">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("tasks.mySearchPlaceholder")}
+            className="pl-9"
+          />
+        </div>
+        <Select value={department} onChange={(e) => setDepartment(e.target.value)}>
+          <option value="ALL">{t("fields.department")}</option>
+          {departments.map((d) => (
+            <option key={d} value={d}>{d}</option>
+          ))}
+        </Select>
+        <Select value={assignee} onChange={(e) => setAssignee(e.target.value)}>
+          <option value="ALL">{t("fields.assignee")}</option>
+          {assignees.map((a) => (
+            <option key={a} value={a}>{a}</option>
+          ))}
+        </Select>
+        <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="ALL">{t("tasks.statuses.ALL")}</option>
+          <option value="NEW">{t("tasks.statuses.NEW")}</option>
+          <option value="IN_PROGRESS">{t("tasks.statuses.IN_PROGRESS")}</option>
+          <option value="PENDING_REVIEW">{t("tasks.statuses.PENDING_REVIEW")}</option>
+          <option value="DONE">{t("tasks.statuses.DONE")}</option>
+        </Select>
       </div>
 
       {review.length > 0 ? (

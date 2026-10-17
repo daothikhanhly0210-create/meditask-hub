@@ -44,6 +44,29 @@ export type ActionItemView = {
   assigneeName: string | null;
   workOrderId: string | null;
   workOrderCode: string | null;
+  converted: boolean;
+  canConvert: boolean;
+  overdue: boolean;
+};
+
+export type ActionItemRow = {
+  id: string;
+  meetingId: string;
+  meetingCode: string;
+  meetingTitle: string;
+  meetingDate: string;
+  title: string;
+  description: string | null;
+  dueDate: string | null;
+  departmentId: string | null;
+  departmentName: string | null;
+  assigneeId: string | null;
+  assigneeName: string | null;
+  workOrderId: string | null;
+  workOrderCode: string | null;
+  converted: boolean;
+  workState: "UNASSIGNED" | "OPEN" | "IN_PROGRESS" | "PENDING_REVIEW" | "DONE" | "CANCELLED";
+  progress: number;
   overdue: boolean;
 };
 

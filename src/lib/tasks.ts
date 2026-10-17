@@ -122,6 +122,37 @@ export function derivedWorkOrderStatus(
   return started ? "IN_PROGRESS" : "OPEN";
 }
 
+export const ACTION_ITEM_WORK_STATES = [
+  "UNASSIGNED",
+  "OPEN",
+  "IN_PROGRESS",
+  "PENDING_REVIEW",
+  "DONE",
+  "CANCELLED",
+] as const;
+export type ActionItemWorkState = (typeof ACTION_ITEM_WORK_STATES)[number];
+
+export function actionItemWorkState(
+  converted: boolean,
+  storedWorkOrderStatus: string | null | undefined,
+  targets: TargetLike[],
+): ActionItemWorkState {
+  if (!converted) return "UNASSIGNED";
+  const s = storedWorkOrderStatus ?? "OPEN";
+  if (s === "CANCELLED") return "CANCELLED";
+  const hasPendingReview = targets.some((t) =>
+    t.subTasks.some((st) => st.status === "PENDING_REVIEW"),
+  );
+  if (hasPendingReview) return "PENDING_REVIEW";
+  if (s === "DONE" || (targets.length > 0 && targets.every(isTargetComplete))) {
+    return "DONE";
+  }
+  if (s === "IN_PROGRESS") return "IN_PROGRESS";
+  const started = targets.some((t) => t.closedAt != null || t.subTasks.length > 0);
+  if (started) return "IN_PROGRESS";
+  return "OPEN";
+}
+
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;

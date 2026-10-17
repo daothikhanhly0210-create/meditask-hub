@@ -41,6 +41,12 @@ export const navGroups: NavGroup[] = [
         permission: ["meeting:view", "meeting:record", "meeting:approve"],
       },
       {
+        key: "nav.actionItems",
+        href: "/meetings/actions",
+        icon: ListChecks,
+        permission: "meeting:view",
+      },
+      {
         key: "nav.reports",
         href: "/reports",
         icon: BarChart3,
