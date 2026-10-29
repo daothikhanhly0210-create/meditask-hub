@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
   // B2 stores attachments (up to 20 MB) in Postgres through Server Actions,
   // so the default 1 MB body limit is raised.
   experimental: {
+    agentUpgrade: "security",
     serverActions: {
       bodySizeLimit: "25mb",
     },
